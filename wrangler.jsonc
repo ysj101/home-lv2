@@ -3,5 +3,14 @@
   "name": "home-lv2",
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry"
+  "main": "@tanstack/react-start/server-entry",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "home-lv2-db",
+      // TODO(#5): `wrangler d1 create home-lv2-db` で発行された ID に差し替える
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "src/db/migrations"
+    }
+  ]
 }

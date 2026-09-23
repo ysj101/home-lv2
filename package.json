@@ -14,6 +14,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "cf-typegen": "wrangler types",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply home-lv2-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply home-lv2-db --remote",
     "deploy": "pnpm run build && wrangler deploy"
   },
   "dependencies": {
@@ -22,6 +26,7 @@
     "@tanstack/react-start": "^1.168.57",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
+    "drizzle-orm": "^0.45.3",
     "lucide-react": "^1.47.0",
     "radix-ui": "^1.6.7",
     "react": "^19.2.0",
@@ -38,6 +43,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^6.0.1",
+    "drizzle-kit": "^0.31.11",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
