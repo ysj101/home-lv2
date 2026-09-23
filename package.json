@@ -13,6 +13,7 @@
     "typecheck": "tsr generate && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "deploy": "pnpm run build && wrangler deploy"
   },
   "dependencies": {
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.26.0",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/router-cli": "^1.132.0",
     "@types/node": "^22.10.2",

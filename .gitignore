@@ -14,3 +14,9 @@ todos.json
 
 # TanStack Router generated route tree
 src/routeTree.gen.ts
+
+# Playwright
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
