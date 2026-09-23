@@ -1,13 +1,19 @@
+/**
+ * 日付は `YYYY-MM-DD` 文字列で扱う（D1 に保存する形式と揃える）。
+ * 期限や残り日数の計算はすべてこのモジュールを経由させ、呼び出し側で
+ * Date の加減算を書かないこと。
+ */
+
 /** 1日のミリ秒数。 */
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
-/** `YYYY-MM-DD` 形式の日付を UTC の Date として解釈する。 */
-export function parseDate(isoDate: string): Date {
+/** `YYYY-MM-DD` を UTC の Date として解釈する。 */
+function parseDate(isoDate: string): Date {
   return new Date(`${isoDate}T00:00:00Z`)
 }
 
-/** Date を `YYYY-MM-DD` 形式に整形する。 */
-export function formatDate(date: Date): string {
+/** Date を `YYYY-MM-DD` に整形する。 */
+function formatDate(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
@@ -18,5 +24,7 @@ export function addDays(isoDate: string, days: number): string {
 
 /** `from` から `to` までの日数を返す。過去なら負の値になる。 */
 export function daysBetween(from: string, to: string): number {
-  return Math.round((parseDate(to).getTime() - parseDate(from).getTime()) / MS_PER_DAY)
+  return Math.round(
+    (parseDate(to).getTime() - parseDate(from).getTime()) / MS_PER_DAY,
+  )
 }
