@@ -19,6 +19,5 @@ CREATE TABLE `tasks` (
 	FOREIGN KEY (`completed_by`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
-CREATE INDEX `tasks_move_id_idx` ON `tasks` (`move_id`);--> statement-breakpoint
-CREATE INDEX `tasks_due_date_idx` ON `tasks` (`due_date`);--> statement-breakpoint
-CREATE INDEX `tasks_status_idx` ON `tasks` (`status`);
+CREATE INDEX `tasks_move_id_due_date_idx` ON `tasks` (`move_id`,`due_date`);--> statement-breakpoint
+CREATE INDEX `tasks_move_id_status_idx` ON `tasks` (`move_id`,`status`);
