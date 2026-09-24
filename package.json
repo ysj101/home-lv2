@@ -15,6 +15,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply home-lv2-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply home-lv2-db --remote",
+    "db:seed:local": "tsx src/db/seed/run.ts --local",
+    "db:seed:remote": "tsx src/db/seed/run.ts --remote",
     "deploy": "pnpm run build && wrangler deploy"
   },
   "dependencies": {
@@ -42,6 +44,7 @@
     "drizzle-kit": "^0.31.11",
     "shadcn": "^4.21.0",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vitest": "^5.0.1",

@@ -20,3 +20,7 @@ src/routeTree.gen.ts
 /playwright-report
 /blob-report
 /playwright/.cache
+
+# wrangler のローカルシークレット（seed 用のメールアドレスなど）
+.dev.vars
+.dev.vars.*
