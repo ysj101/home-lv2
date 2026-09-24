@@ -109,8 +109,58 @@ export const taskTemplates = sqliteTable('task_templates', {
   ...timestamps,
 })
 
+/** MVP は todo / completed のみ。将来 in_progress / blocked を追加できる。 */
+export const TASK_STATUSES = ['todo', 'completed'] as const
+export type TaskStatus = (typeof TASK_STATUSES)[number]
+
+/** テンプレート由来か手動追加か。引越し日変更時の期限再計算の対象を絞るために使う。 */
+export const TASK_SOURCES = ['template', 'manual'] as const
+export type TaskSource = (typeof TASK_SOURCES)[number]
+
+/**
+ * 個々の TODO（Quest）。
+ *
+ * `due_date` は move_date と同じく `YYYY-MM-DD` の文字列。`completed_at` は
+ * 完了した瞬間の時刻なので epoch ミリ秒で保持する。
+ */
+export const tasks = sqliteTable(
+  'tasks',
+  {
+    id: id(),
+    moveId: text('move_id')
+      .notNull()
+      .references(() => moves.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    description: text('description'),
+    category: text('category').$type<TaskCategory>().notNull(),
+    /** `YYYY-MM-DD` */
+    dueDate: text('due_date'),
+    assigneeId: text('assignee_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    status: text('status').$type<TaskStatus>().notNull().default('todo'),
+    source: text('source').$type<TaskSource>().notNull(),
+    // テンプレートが消えても生成済みの Task は残す。
+    templateId: text('template_id').references(() => taskTemplates.id, {
+      onDelete: 'set null',
+    }),
+    completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
+    completedBy: text('completed_by').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    ...timestamps,
+  },
+  (table) => [
+    index('tasks_move_id_idx').on(table.moveId),
+    index('tasks_due_date_idx').on(table.dueDate),
+    index('tasks_status_idx').on(table.status),
+  ],
+)
+
 export const usersRelations = relations(users, ({ many }) => ({
   householdMembers: many(householdMembers),
+  assignedTasks: many(tasks, { relationName: 'assignee' }),
+  completedTasks: many(tasks, { relationName: 'completedBy' }),
 }))
 
 export const householdsRelations = relations(households, ({ many }) => ({
@@ -118,10 +168,33 @@ export const householdsRelations = relations(households, ({ many }) => ({
   moves: many(moves),
 }))
 
-export const movesRelations = relations(moves, ({ one }) => ({
+export const movesRelations = relations(moves, ({ one, many }) => ({
   household: one(households, {
     fields: [moves.householdId],
     references: [households.id],
+  }),
+  tasks: many(tasks),
+}))
+
+export const taskTemplatesRelations = relations(taskTemplates, ({ many }) => ({
+  tasks: many(tasks),
+}))
+
+export const tasksRelations = relations(tasks, ({ one }) => ({
+  move: one(moves, { fields: [tasks.moveId], references: [moves.id] }),
+  assignee: one(users, {
+    fields: [tasks.assigneeId],
+    references: [users.id],
+    relationName: 'assignee',
+  }),
+  completedByUser: one(users, {
+    fields: [tasks.completedBy],
+    references: [users.id],
+    relationName: 'completedBy',
+  }),
+  template: one(taskTemplates, {
+    fields: [tasks.templateId],
+    references: [taskTemplates.id],
   }),
 }))
 
@@ -149,3 +222,5 @@ export type Move = typeof moves.$inferSelect
 export type NewMove = typeof moves.$inferInsert
 export type TaskTemplate = typeof taskTemplates.$inferSelect
 export type NewTaskTemplate = typeof taskTemplates.$inferInsert
+export type Task = typeof tasks.$inferSelect
+export type NewTask = typeof tasks.$inferInsert
