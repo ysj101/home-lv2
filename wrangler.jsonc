@@ -8,8 +8,7 @@
     {
       "binding": "DB",
       "database_name": "home-lv2-db",
-      // TODO(#5): `wrangler d1 create home-lv2-db` で発行された ID に差し替える
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "c2910ade-7546-417b-98e7-2c77d4689ab4",
       // drizzle.config.ts の `out` と一致させること
       "migrations_dir": "src/db/migrations"
     }
