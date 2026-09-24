@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "a4ce805e-f9e6-4860-a4a1-3afa405d5804",
+  "id": "0455fb40-0957-4397-b98e-7686e5ba2703",
   "prevId": "23ece08e-a98f-4a2f-bf60-ebf7ce8f18dc",
   "tables": {
     "household_members": {
@@ -391,23 +391,18 @@
         }
       },
       "indexes": {
-        "tasks_move_id_idx": {
-          "name": "tasks_move_id_idx",
+        "tasks_move_id_due_date_idx": {
+          "name": "tasks_move_id_due_date_idx",
           "columns": [
-            "move_id"
-          ],
-          "isUnique": false
-        },
-        "tasks_due_date_idx": {
-          "name": "tasks_due_date_idx",
-          "columns": [
+            "move_id",
             "due_date"
           ],
           "isUnique": false
         },
-        "tasks_status_idx": {
-          "name": "tasks_status_idx",
+        "tasks_move_id_status_idx": {
+          "name": "tasks_move_id_status_idx",
           "columns": [
+            "move_id",
             "status"
           ],
           "isUnique": false
