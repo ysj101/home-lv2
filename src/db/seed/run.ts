@@ -5,6 +5,7 @@ import { join } from 'node:path'
 
 import { readHouseholdSeedConfig } from '@/db/seed/config'
 import { buildHouseholdSeedStatements } from '@/db/seed/household'
+import { buildTaskTemplateSeedStatements } from '@/db/seed/task-templates'
 
 const DATABASE_NAME = 'home-lv2-db'
 
@@ -15,7 +16,10 @@ const DATABASE_NAME = 'home-lv2-db'
 function main() {
   const target = process.argv.includes('--remote') ? '--remote' : '--local'
 
-  const statements = [...buildHouseholdSeedStatements(readHouseholdSeedConfig())]
+  const statements = [
+    ...buildHouseholdSeedStatements(readHouseholdSeedConfig()),
+    ...buildTaskTemplateSeedStatements(),
+  ]
 
   const file = join(mkdtempSync(join(tmpdir(), 'home-lv2-seed-')), 'seed.sql')
   writeFileSync(file, `${statements.join('\n')}\n`)
