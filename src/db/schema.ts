@@ -9,7 +9,11 @@ import {
 
 import type { TaskCategory } from '@/lib/task-category'
 
-/** 主キーは D1 上で衝突しない UUID v4 を採用する。 */
+/**
+ * 主キーの既定は挿入時に採番する UUID v4。
+ * ただし seed で投入するマスタデータ（task_templates）だけは、コードと DB の
+ * 対応を保つために seed 側が安定したスラッグを明示的に渡す。
+ */
 const id = () =>
   text('id')
     .primaryKey()
