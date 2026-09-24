@@ -68,12 +68,44 @@ export const householdMembers = sqliteTable(
   ],
 )
 
+/**
+ * 引越し（Main Quest）。MVP では Household ごとに1件を想定する。
+ *
+ * `move_date` は時刻を持たない「日付」なので、epoch ではなく `YYYY-MM-DD` の
+ * 文字列で保持する。Task の期限算出（`dueDate = moveDate + offsetDays`）は
+ * `@/lib/date` の文字列ベースの関数で行う。
+ */
+export const moves = sqliteTable(
+  'moves',
+  {
+    id: id(),
+    householdId: text('household_id')
+      .notNull()
+      .references(() => households.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    /** `YYYY-MM-DD` */
+    moveDate: text('move_date').notNull(),
+    oldAddress: text('old_address'),
+    newAddress: text('new_address'),
+    ...timestamps,
+  },
+  (table) => [index('moves_household_id_idx').on(table.householdId)],
+)
+
 export const usersRelations = relations(users, ({ many }) => ({
   householdMembers: many(householdMembers),
 }))
 
 export const householdsRelations = relations(households, ({ many }) => ({
   members: many(householdMembers),
+  moves: many(moves),
+}))
+
+export const movesRelations = relations(moves, ({ one }) => ({
+  household: one(households, {
+    fields: [moves.householdId],
+    references: [households.id],
+  }),
 }))
 
 export const householdMembersRelations = relations(
@@ -96,3 +128,5 @@ export type Household = typeof households.$inferSelect
 export type NewHousehold = typeof households.$inferInsert
 export type HouseholdMember = typeof householdMembers.$inferSelect
 export type NewHouseholdMember = typeof householdMembers.$inferInsert
+export type Move = typeof moves.$inferSelect
+export type NewMove = typeof moves.$inferInsert
