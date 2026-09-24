@@ -37,6 +37,13 @@ describe('TASK_TEMPLATE_SEEDS', () => {
   })
 })
 
+/** 組み立てられた INSERT 文から sort_order の値を取り出す。 */
+function sortOrderOf(statement: string): number {
+  const matched = statement.match(/, (\d+), \(unixepoch/)
+  if (!matched) throw new Error(`sort_order が見つかりません: ${statement}`)
+  return Number(matched[1])
+}
+
 describe('buildTaskTemplateSeedStatements', () => {
   it('テンプレート1件につき1文を組み立てる', () => {
     expect(buildTaskTemplateSeedStatements()).toHaveLength(
@@ -62,8 +69,7 @@ describe('buildTaskTemplateSeedStatements', () => {
       },
     ])
 
-    expect(statements[0]).toContain("'a', 'A', '', 'other', -1, 1)")
-    expect(statements[1]).toContain("'b', 'B', '', 'other', 1, 2)")
+    expect(statements.map(sortOrderOf)).toEqual([1, 2])
   })
 
   it('再実行しても増えないよう ON CONFLICT で upsert する', () => {

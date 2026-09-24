@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  MVP_HOUSEHOLD_ID,
-  buildHouseholdSeedStatements,
-} from '@/db/seed/household'
+import { buildHouseholdSeedStatements } from '@/db/seed/household'
 
 const config = {
   householdName: 'Our Family',
@@ -19,7 +16,6 @@ describe('buildHouseholdSeedStatements', () => {
 
     expect(statements).toHaveLength(5)
     expect(statements[0]).toContain('INSERT INTO households')
-    expect(statements[0]).toContain(MVP_HOUSEHOLD_ID)
     expect(
       statements.filter((s) => s.startsWith('INSERT INTO users')),
     ).toHaveLength(2)
@@ -28,7 +24,7 @@ describe('buildHouseholdSeedStatements', () => {
     ).toHaveLength(2)
   })
 
-  it('すべての INSERT が ON CONFLICT DO NOTHING で冪等になっている', () => {
+  it('家族の情報は既存行に触らない（ON CONFLICT DO NOTHING）', () => {
     for (const statement of buildHouseholdSeedStatements(config)) {
       expect(statement).toContain('ON CONFLICT')
       expect(statement).toContain('DO NOTHING')
@@ -36,10 +32,10 @@ describe('buildHouseholdSeedStatements', () => {
   })
 
   it('シングルクォートを含む値をエスケープする', () => {
-    const statements = buildHouseholdSeedStatements(config)
+    const sql = buildHouseholdSeedStatements(config).join('\n')
 
-    expect(statements.join('\n')).toContain("'o''brien@example.com'")
-    expect(statements.join('\n')).not.toContain("'o'brien@example.com'")
+    expect(sql).toContain("'o''brien@example.com'")
+    expect(sql).not.toContain("'o'brien@example.com'")
   })
 
   it('household_members は email から既存 user_id を引き直す', () => {
@@ -47,7 +43,7 @@ describe('buildHouseholdSeedStatements', () => {
       s.startsWith('INSERT INTO household_members'),
     )
 
-    expect(memberStatement).toContain('SELECT')
-    expect(memberStatement).toContain('FROM users WHERE email =')
+    expect(memberStatement).toContain('(SELECT id FROM users WHERE email =')
+    expect(memberStatement).toContain('ON CONFLICT(household_id, user_id)')
   })
 })

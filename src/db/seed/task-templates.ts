@@ -1,4 +1,5 @@
-import { quote } from '@/db/seed/sql'
+import { taskTemplates } from '@/db/schema'
+import { buildInsertStatement, raw } from '@/db/seed/sql'
 import type { TaskCategory } from '@/lib/task-category'
 
 type TaskTemplateSeed = {
@@ -205,16 +206,20 @@ export const TASK_TEMPLATE_SEEDS: TaskTemplateSeed[] = [
 export function buildTaskTemplateSeedStatements(
   seeds: TaskTemplateSeed[] = TASK_TEMPLATE_SEEDS,
 ): string[] {
-  return seeds.map((seed, index) => {
-    const sortOrder = index + 1
-
-    return [
-      'INSERT INTO task_templates (id, title, description, category, offset_days, sort_order)',
-      `VALUES (${quote(seed.id)}, ${quote(seed.title)}, ${quote(seed.description)}, ${quote(seed.category)}, ${seed.offsetDays}, ${sortOrder})`,
-      'ON CONFLICT(id) DO UPDATE SET',
-      'title = excluded.title, description = excluded.description,',
-      'category = excluded.category, offset_days = excluded.offset_days,',
-      'sort_order = excluded.sort_order, updated_at = (unixepoch() * 1000);',
-    ].join(' ')
-  })
+  return seeds.map((seed, index) =>
+    buildInsertStatement(
+      taskTemplates,
+      {
+        id: seed.id,
+        title: seed.title,
+        description: seed.description,
+        category: seed.category,
+        offsetDays: seed.offsetDays,
+        // 配列の並びをそのまま並び順にする。入れ替え時に番号を振り直さなくてよい。
+        sortOrder: index + 1,
+        updatedAt: raw('(unixepoch() * 1000)'),
+      },
+      { target: ['id'], action: 'update' },
+    ),
+  )
 }

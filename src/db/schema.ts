@@ -9,7 +9,11 @@ import {
 
 import type { TaskCategory } from '@/lib/task-category'
 
-/** 主キーは D1 上で衝突しない UUID v4 を採用する。 */
+/**
+ * 主キーの既定は挿入時に採番する UUID v4。
+ * ただし seed で投入するマスタデータ（task_templates）だけは、コードと DB の
+ * 対応を保つために seed 側が安定したスラッグを明示的に渡す。
+ */
 const id = () =>
   text('id')
     .primaryKey()
@@ -150,10 +154,13 @@ export const tasks = sqliteTable(
     }),
     ...timestamps,
   },
+  // Task は常に Move のスコープで引く（§12 Task List, §13 Dashboard）。
+  // move_id 先頭の複合索引にすることで、move_id 単独の検索も同じ索引で賄える。
+  // status は todo / completed の2値しかなく単独索引はほぼ効かないため、
+  // 索引を3本から2本に減らして完了トグル時の書き込みコストを抑える。
   (table) => [
-    index('tasks_move_id_idx').on(table.moveId),
-    index('tasks_due_date_idx').on(table.dueDate),
-    index('tasks_status_idx').on(table.status),
+    index('tasks_move_id_due_date_idx').on(table.moveId, table.dueDate),
+    index('tasks_move_id_status_idx').on(table.moveId, table.status),
   ],
 )
 
