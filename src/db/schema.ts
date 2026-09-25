@@ -7,6 +7,8 @@ import {
   text,
 } from 'drizzle-orm/sqlite-core'
 
+import type { TaskCategory } from '@/lib/task-category'
+
 /**
  * 主キーの既定は挿入時に採番する UUID v4。
  * ただし seed で投入するマスタデータ（task_templates）だけは、コードと DB の
@@ -96,6 +98,21 @@ export const moves = sqliteTable(
   (table) => [index('moves_household_id_idx').on(table.householdId)],
 )
 
+/**
+ * 標準 TODO の雛形。引越し日に `offset_days` を足した日付が Task の期限になる
+ * （spec §11 UC-02）。`sort_order` は Task 生成時と一覧表示での並び順。
+ */
+export const taskTemplates = sqliteTable('task_templates', {
+  id: id(),
+  title: text('title').notNull(),
+  description: text('description'),
+  category: text('category').$type<TaskCategory>().notNull(),
+  /** 引越し日からの相対日数。引越し前はマイナス、後はプラス。 */
+  offsetDays: integer('offset_days').notNull(),
+  sortOrder: integer('sort_order').notNull(),
+  ...timestamps,
+})
+
 export const usersRelations = relations(users, ({ many }) => ({
   householdMembers: many(householdMembers),
 }))
@@ -134,3 +151,5 @@ export type HouseholdMember = typeof householdMembers.$inferSelect
 export type NewHouseholdMember = typeof householdMembers.$inferInsert
 export type Move = typeof moves.$inferSelect
 export type NewMove = typeof moves.$inferInsert
+export type TaskTemplate = typeof taskTemplates.$inferSelect
+export type NewTaskTemplate = typeof taskTemplates.$inferInsert
