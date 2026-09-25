@@ -7,6 +7,7 @@ import {
   buildHouseholdSeedStatements,
   type HouseholdSeedConfig,
 } from '@/db/seed/household'
+import { buildTaskTemplateSeedStatements } from '@/db/seed/task-templates'
 
 const DATABASE_NAME = 'home-lv2-db'
 
@@ -50,6 +51,7 @@ function main() {
 
   const statements = [
     ...buildHouseholdSeedStatements(readHouseholdSeedConfig()),
+    ...buildTaskTemplateSeedStatements(),
   ]
 
   const file = join(mkdtempSync(join(tmpdir(), 'home-lv2-seed-')), 'seed.sql')
