@@ -33,11 +33,6 @@ export function insertTasksStatement(db: Db, values: NewTask[]) {
   return db.insert(tasks).values(values).returning()
 }
 
-/** batch に載せるための insert 文。実行はしない。 */
-export function insertTasksStatement(db: Db, values: NewTask[]) {
-  return db.insert(tasks).values(values).returning()
-}
-
 /** Household スコープで Task を1件引く。他 Household のものは null。 */
 export async function findTaskInHousehold(
   db: Db,
