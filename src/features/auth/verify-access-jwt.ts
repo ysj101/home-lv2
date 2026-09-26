@@ -55,7 +55,12 @@ export async function verifyAccessJwt(
   config: AccessConfig,
 ): Promise<string> {
   // ローカル開発では Access を通らないので、明示的に設定された場合のみ迂回する。
+  // 万一これが本番で有効になっていても気づけるよう、必ず警告を残す。
   if (config.devUserEmail) {
+    console.warn(
+      `[auth] DEV_USER_EMAIL による認証バイパスが有効です (${config.devUserEmail})。本番では設定しないでください。`,
+    )
+
     return config.devUserEmail
   }
 
