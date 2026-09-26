@@ -57,10 +57,16 @@ export function createTestDb(): TestDb {
     return { rows: method === 'get' ? ((rows[0] ?? []) as unknown[]) : rows }
   }
 
+  // D1 の batch は1つのトランザクションなので、テスト側も同じ意味になるよう
+  // better-sqlite3 のトランザクションで包む（途中で失敗したら全部巻き戻る）。
+  const runBatch = sqlite.transaction(
+    (queries: { sql: string; params: unknown[]; method: string }[]) =>
+      queries.map(({ sql, params, method }) => run(sql, params, method)),
+  )
+
   const db = drizzle(
     async (sql, params, method) => run(sql, params, method),
-    async (queries) =>
-      queries.map(({ sql, params, method }) => run(sql, params, method)),
+    async (queries) => runBatch(queries),
     { schema },
   ) as unknown as Db
 

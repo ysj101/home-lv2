@@ -29,6 +29,11 @@ export async function insertMove(db: Db, values: NewMove): Promise<Move> {
   return move
 }
 
+/** batch に載せるための insert 文。実行はしない。 */
+export function insertMoveStatement(db: Db, values: NewMove) {
+  return db.insert(moves).values(values).returning()
+}
+
 export async function updateMoveById(
   db: Db,
   householdId: string,

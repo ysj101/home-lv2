@@ -5,7 +5,7 @@ import { createTestDb, type TestDb } from '@/db/test-db'
 import { TASK_TEMPLATE_SEEDS } from '@/db/seed/task-templates'
 import type { HouseholdContext } from '@/features/auth/household-context'
 import { createTestContext } from '@/features/auth/test-context'
-import { createMove } from '@/features/move/create-move'
+import { moves } from '@/db/schema'
 import {
   buildTasksFromTemplates,
   generateTasksFromTemplates,
@@ -94,6 +94,16 @@ describe('buildTasksFromTemplates', () => {
 })
 
 describe('generateTasksFromTemplates', () => {
+  /** createMove は #19 で Task も作るので、ここでは Move だけを直接用意する。 */
+  async function insertMove() {
+    const [move] = await db
+      .insert(moves)
+      .values({ householdId: 'h1', name: 'Home Lv.2', moveDate: MOVE_DATE })
+      .returning()
+
+    return move
+  }
+
   beforeEach(async () => {
     await db.insert(taskTemplates).values(
       TASK_TEMPLATE_SEEDS.map((seed, index) => ({
@@ -108,10 +118,7 @@ describe('generateTasksFromTemplates', () => {
   })
 
   it('テンプレート件数分の Task を生成する', async () => {
-    const move = await createMove(context, {
-      name: 'Home Lv.2',
-      moveDate: MOVE_DATE,
-    })
+    const move = await insertMove()
 
     const created = await generateTasksFromTemplates(context, move)
 
@@ -119,10 +126,7 @@ describe('generateTasksFromTemplates', () => {
   })
 
   it('標準テンプレートの期限が正しく計算される', async () => {
-    const move = await createMove(context, {
-      name: 'Home Lv.2',
-      moveDate: MOVE_DATE,
-    })
+    const move = await insertMove()
 
     const created = await generateTasksFromTemplates(context, move)
     const electricity = created.find((task) => task.templateId === 'electricity')
@@ -136,10 +140,7 @@ describe('generateTasksFromTemplates', () => {
   })
 
   it('生成した Task はすべて対象 Move に紐づく', async () => {
-    const move = await createMove(context, {
-      name: 'Home Lv.2',
-      moveDate: MOVE_DATE,
-    })
+    const move = await insertMove()
 
     const created = await generateTasksFromTemplates(context, move)
 
