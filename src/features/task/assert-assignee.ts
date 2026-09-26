@@ -1,5 +1,5 @@
-import { getHouseholdMembers } from '@/features/auth/get-household-members'
 import { badRequest } from '@/features/auth/errors'
+import { isHouseholdMember } from '@/features/auth/get-household-members'
 import type { HouseholdContext } from '@/features/auth/household-context'
 
 /**
@@ -12,9 +12,7 @@ export async function assertAssignee(
 ): Promise<string | null> {
   if (!assigneeId) return null
 
-  const members = await getHouseholdMembers(context.db, context.household.id)
-
-  if (!members.some((member) => member.id === assigneeId)) {
+  if (!(await isHouseholdMember(context.db, context.household.id, assigneeId))) {
     throw badRequest('担当者は同じ Household のメンバーから選んでください。')
   }
 

@@ -12,9 +12,8 @@ import {
 import type { SQL } from 'drizzle-orm'
 
 import { moves, tasks, users, type Task } from '@/db/schema'
-import { badRequest } from '@/features/auth/errors'
 import type { HouseholdContext } from '@/features/auth/household-context'
-import { TASK_CATEGORIES, type TaskCategory } from '@/lib/task-category'
+import { requireTaskCategory, type TaskCategory } from '@/lib/task-category'
 
 /**
  * Task 一覧を取得する（spec §12.2）。
@@ -59,6 +58,7 @@ function statusCondition(
     case 'completed':
       return eq(tasks.status, 'completed')
     case 'overdue':
+      // @/lib/dashboard の isOverdue と同じ定義。片方を変えたら両方直すこと。
       return and(ne(tasks.status, 'completed'), lt(tasks.dueDate, today))
     default:
       return undefined
@@ -86,9 +86,7 @@ export async function getTasks(
   context: HouseholdContext,
   filter: GetTasksFilter,
 ): Promise<TaskListItem[]> {
-  if (filter.category && !TASK_CATEGORIES.includes(filter.category)) {
-    throw badRequest(`不明なカテゴリです: ${filter.category}`)
-  }
+  if (filter.category) requireTaskCategory(filter.category)
 
   const rows = await context.db
     .select({
