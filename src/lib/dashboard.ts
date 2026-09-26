@@ -21,11 +21,7 @@ export function daysUntil(moveDate: string, today: string): number {
 
 /** 完了率（0〜1）。Task が0件なら 0 を返し、NaN にしない。 */
 export function progress(tasks: DashboardTask[]): number {
-  if (tasks.length === 0) return 0
-
-  const completed = tasks.filter((task) => task.status === 'completed').length
-
-  return completed / tasks.length
+  return ratio(countCompleted(tasks), tasks.length)
 }
 
 /** 完了率の百分率表示（0〜100 の整数）。 */
@@ -33,7 +29,19 @@ export function progressPercent(tasks: DashboardTask[]): number {
   return Math.round(progress(tasks) * 100)
 }
 
-/** 期限超過。期限なしと完了済みは対象外。 */
+function countCompleted(tasks: DashboardTask[]): number {
+  return tasks.filter((task) => task.status === 'completed').length
+}
+
+function ratio(completed: number, total: number): number {
+  return total === 0 ? 0 : completed / total
+}
+
+/**
+ * 期限超過。期限なしと完了済みは対象外。
+ * `@/features/task/get-tasks` の status: 'overdue' と同じ定義。
+ * 片方を変えたら両方直すこと。
+ */
 export function isOverdue(task: DashboardTask, today: string): boolean {
   if (task.status === 'completed' || task.dueDate === null) return false
 
@@ -69,13 +77,19 @@ export function summarize(
   tasks: DashboardTask[],
   today: string,
 ): DashboardSummary {
-  const completed = tasks.filter((task) => task.status === 'completed').length
+  let completed = 0
+  let overdue = 0
+
+  for (const task of tasks) {
+    if (task.status === 'completed') completed += 1
+    else if (isOverdue(task, today)) overdue += 1
+  }
 
   return {
     total: tasks.length,
     completed,
     remaining: tasks.length - completed,
-    overdue: tasks.filter((task) => isOverdue(task, today)).length,
-    progressPercent: progressPercent(tasks),
+    overdue,
+    progressPercent: Math.round(ratio(completed, tasks.length) * 100),
   }
 }
