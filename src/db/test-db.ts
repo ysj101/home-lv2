@@ -17,17 +17,21 @@ import * as schema from '@/db/schema'
 
 const MIGRATIONS_DIR = join(process.cwd(), 'src/db/migrations')
 
-/** drizzle-kit が生成した順にマイグレーションの SQL 文を読み出す。 */
-function readMigrationStatements(): string[] {
-  return readdirSync(MIGRATIONS_DIR)
+/**
+ * drizzle-kit が生成した順にマイグレーション SQL を読む。
+ *
+ * 内容はテスト実行中に変わらないので一度だけ読んで使い回す。
+ * ファイルは分割せずそのまま渡す（better-sqlite3 の `exec` が複数文を解釈でき、
+ * `--> statement-breakpoint` は SQL のコメントとして無視されるため、
+ * drizzle-kit の出力フォーマットに依存しなくて済む）。
+ */
+let migrations: string[] | undefined
+
+function readMigrations(): string[] {
+  return (migrations ??= readdirSync(MIGRATIONS_DIR)
     .filter((file) => file.endsWith('.sql'))
     .sort()
-    .flatMap((file) =>
-      readFileSync(join(MIGRATIONS_DIR, file), 'utf8')
-        .split('--> statement-breakpoint')
-        .map((statement) => statement.trim())
-        .filter(Boolean),
-    )
+    .map((file) => readFileSync(join(MIGRATIONS_DIR, file), 'utf8')))
 }
 
 export type TestDb = Db & {
@@ -40,8 +44,8 @@ export function createTestDb(): TestDb {
   // D1 と同じく外部キー制約を効かせる。
   sqlite.pragma('foreign_keys = ON')
 
-  for (const statement of readMigrationStatements()) {
-    sqlite.exec(statement)
+  for (const migration of readMigrations()) {
+    sqlite.exec(migration)
   }
 
   const run = (sql: string, params: unknown[], method: string) => {

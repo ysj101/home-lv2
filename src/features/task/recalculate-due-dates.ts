@@ -1,9 +1,8 @@
 import { and, eq, inArray } from 'drizzle-orm'
 
-import { findMoveByHousehold } from '@/db/repositories/move'
 import { taskTemplates, tasks, type Task } from '@/db/schema'
-import { notFound } from '@/features/auth/errors'
 import type { HouseholdContext } from '@/features/auth/household-context'
+import { requireMove } from '@/features/move/require-move'
 import { addDays } from '@/lib/date'
 
 /**
@@ -68,17 +67,6 @@ async function findTemplateTasks(
     )
 }
 
-/** 現在 Household の Move を取得する。他 Household や未登録なら 404。 */
-async function requireMove(context: HouseholdContext, moveId: string) {
-  const move = await findMoveByHousehold(context.db, context.household.id)
-
-  if (!move || move.id !== moveId) {
-    throw notFound('引越しが見つかりません。')
-  }
-
-  return move
-}
-
 /**
  * 新しい引越し日にしたときに、どの Task の期限がどう変わるかを返す。
  * DB は更新しない。
@@ -88,12 +76,13 @@ export async function previewRecalculation(
   moveId: string,
   newMoveDate: string,
 ): Promise<DueDateChange[]> {
-  await requireMove(context, moveId)
+  // 所属の確認と対象の取得は互いに依存しないので並行して投げる。
+  const [, templateTasks] = await Promise.all([
+    requireMove(context, moveId),
+    findTemplateTasks(context, moveId),
+  ])
 
-  return computeDueDateChanges(
-    await findTemplateTasks(context, moveId),
-    newMoveDate,
-  )
+  return computeDueDateChanges(templateTasks, newMoveDate)
 }
 
 /**
@@ -106,11 +95,11 @@ export async function recalculateTemplateTaskDueDates(
   context: HouseholdContext,
   moveId: string,
 ): Promise<Task[]> {
-  const move = await requireMove(context, moveId)
-  const changes = computeDueDateChanges(
-    await findTemplateTasks(context, moveId),
-    move.moveDate,
-  )
+  const [move, templateTasks] = await Promise.all([
+    requireMove(context, moveId),
+    findTemplateTasks(context, moveId),
+  ])
+  const changes = computeDueDateChanges(templateTasks, move.moveDate)
 
   if (changes.length === 0) return []
 
@@ -121,16 +110,15 @@ export async function recalculateTemplateTaskDueDates(
     idsByDueDate.set(change.nextDueDate, ids)
   }
 
-  const updated: Task[] = []
-  for (const [dueDate, ids] of idsByDueDate) {
-    updated.push(
-      ...(await context.db
+  const updated = await Promise.all(
+    Array.from(idsByDueDate, ([dueDate, ids]) =>
+      context.db
         .update(tasks)
         .set({ dueDate, updatedAt: new Date() })
         .where(inArray(tasks.id, ids))
-        .returning()),
-    )
-  }
+        .returning(),
+    ),
+  )
 
-  return updated
+  return updated.flat()
 }
