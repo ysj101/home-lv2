@@ -55,3 +55,21 @@ export async function findTaskInHousehold(
 export async function listTasksByMove(db: Db, moveId: string): Promise<Task[]> {
   return db.select().from(tasks).where(eq(tasks.moveId, moveId))
 }
+
+export async function updateTaskById(
+  db: Db,
+  taskId: string,
+  values: Partial<Omit<NewTask, 'id' | 'moveId'>>,
+): Promise<Task> {
+  const [task] = await db
+    .update(tasks)
+    .set({ ...values, updatedAt: new Date() })
+    .where(eq(tasks.id, taskId))
+    .returning()
+
+  return task
+}
+
+export async function deleteTaskById(db: Db, taskId: string): Promise<void> {
+  await db.delete(tasks).where(eq(tasks.id, taskId))
+}
