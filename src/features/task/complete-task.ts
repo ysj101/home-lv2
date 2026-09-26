@@ -1,7 +1,27 @@
-import { updateTaskById } from '@/db/repositories/task'
-import type { Task } from '@/db/schema'
+import { updateTaskInHousehold } from '@/db/repositories/task'
+import type { NewTask, Task } from '@/db/schema'
+import { notFound } from '@/features/auth/errors'
 import type { HouseholdContext } from '@/features/auth/household-context'
-import { requireTask } from '@/features/task/require-task'
+
+/** Household スコープで更新し、対象が無ければ 404。 */
+async function update(
+  context: HouseholdContext,
+  taskId: string,
+  values: Partial<Omit<NewTask, 'id' | 'moveId'>>,
+): Promise<Task> {
+  const task = await updateTaskInHousehold(
+    context.db,
+    context.household.id,
+    taskId,
+    values,
+  )
+
+  if (!task) {
+    throw notFound('タスクが見つかりません。')
+  }
+
+  return task
+}
 
 /**
  * Task を完了にする（spec §11 UC-05）。
@@ -19,9 +39,7 @@ export async function completeTask(
   taskId: string,
   completedAt: Date = new Date(),
 ): Promise<Task> {
-  await requireTask(context, taskId)
-
-  return updateTaskById(context.db, taskId, {
+  return update(context, taskId, {
     status: 'completed',
     completedAt,
     completedBy: context.user.id,
@@ -36,9 +54,7 @@ export async function reopenTask(
   context: HouseholdContext,
   taskId: string,
 ): Promise<Task> {
-  await requireTask(context, taskId)
-
-  return updateTaskById(context.db, taskId, {
+  return update(context, taskId, {
     status: 'todo',
     completedAt: null,
     completedBy: null,

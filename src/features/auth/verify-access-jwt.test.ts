@@ -142,8 +142,9 @@ describe('verifyAccessJwt', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
-  it('devUserEmail が設定されていれば JWT を見ずにそのメールを返す', async () => {
+  it('devUserEmail が設定されていれば JWT を見ずにそのメールを返し、警告を残す', async () => {
     const fetchMock = stubJwksFetch()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
     await expect(
       verifyAccessJwt(requestWithToken(), {
@@ -152,5 +153,8 @@ describe('verifyAccessJwt', () => {
       }),
     ).resolves.toBe('dev@example.com')
     expect(fetchMock).not.toHaveBeenCalled()
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('認証バイパスが有効です'),
+    )
   })
 })
