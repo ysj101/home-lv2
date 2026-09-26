@@ -4,10 +4,8 @@ import { householdMembers, moves, tasks, users } from '@/db/schema'
 import { createTestDb, type TestDb } from '@/db/test-db'
 import type { HouseholdContext } from '@/features/auth/household-context'
 import { createTestContext } from '@/features/auth/test-context'
-import {
-  assignTask,
-  listAssignableMembers,
-} from '@/features/task/assign-task'
+import { getHouseholdMembers } from '@/features/auth/get-household-members'
+import { assignTask } from '@/features/task/assign-task'
 
 let db: TestDb
 let context: HouseholdContext
@@ -131,7 +129,7 @@ describe('assignTask', () => {
   })
 })
 
-describe('listAssignableMembers', () => {
+describe('getHouseholdMembers', () => {
   it('同じ Household のメンバーだけを返す', async () => {
     await createTestContext(db, {
       householdId: 'h2',
@@ -140,7 +138,7 @@ describe('listAssignableMembers', () => {
       userName: 'Other',
     })
 
-    const members = await listAssignableMembers(context)
+    const members = await getHouseholdMembers(context)
 
     expect(members.map((member) => member.id).sort()).toEqual([
       'u-partner',
