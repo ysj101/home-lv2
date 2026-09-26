@@ -22,12 +22,14 @@ export async function listTaskTemplates(db: Db): Promise<TaskTemplate[]> {
   return db.select().from(taskTemplates).orderBy(asc(taskTemplates.sortOrder))
 }
 
-export async function insertTasks(
-  db: Db,
-  values: NewTask[],
-): Promise<Task[]> {
+export async function insertTasks(db: Db, values: NewTask[]): Promise<Task[]> {
   if (values.length === 0) return []
 
+  return insertTasksStatement(db, values)
+}
+
+/** batch に載せるための insert 文。空配列は渡せない。 */
+export function insertTasksStatement(db: Db, values: NewTask[]) {
   return db.insert(tasks).values(values).returning()
 }
 
@@ -47,6 +49,3 @@ export async function findTaskInHousehold(
   return row?.task ?? null
 }
 
-export async function listTasksByMove(db: Db, moveId: string): Promise<Task[]> {
-  return db.select().from(tasks).where(eq(tasks.moveId, moveId))
-}
