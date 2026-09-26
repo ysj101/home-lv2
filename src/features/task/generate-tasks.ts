@@ -1,3 +1,4 @@
+import type { Db } from '@/db/client'
 import { insertTasks, listTaskTemplates } from '@/db/repositories/task'
 import type { Move, NewTask, Task, TaskTemplate } from '@/db/schema'
 import type { HouseholdContext } from '@/features/auth/household-context'
@@ -30,16 +31,26 @@ export function buildTasksFromTemplates(
 }
 
 /**
- * 全テンプレートから Move の Task を一括生成する。
+ * 全テンプレートを読んで Move の Task の挿入値を組み立てる。
  *
- * 対象 Move が現在 Household のものであることは呼び出し側で担保する
- * （#19 では作成直後の Move、それ以外は Household スコープで引いた Move）。
+ * 挿入までは行わないので、単発でも batch でも同じ組み立てを使える
+ * （createMove は batch に載せるためこちらを使う）。
+ */
+export async function buildMoveTasks(
+  db: Db,
+  move: Pick<Move, 'id' | 'moveDate'>,
+): Promise<NewTask[]> {
+  return buildTasksFromTemplates(move, await listTaskTemplates(db))
+}
+
+/**
+ * 全テンプレートから Move の Task を一括生成する（spec §14）。
+ *
+ * 対象 Move が現在 Household のものであることは呼び出し側で担保する。
  */
 export async function generateTasksFromTemplates(
   context: HouseholdContext,
   move: Pick<Move, 'id' | 'moveDate'>,
 ): Promise<Task[]> {
-  const templates = await listTaskTemplates(context.db)
-
-  return insertTasks(context.db, buildTasksFromTemplates(move, templates))
+  return insertTasks(context.db, await buildMoveTasks(context.db, move))
 }

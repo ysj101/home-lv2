@@ -1,4 +1,4 @@
-import { and, asc, eq } from 'drizzle-orm'
+import { and, asc, eq, exists, sql } from 'drizzle-orm'
 
 import type { Db } from '@/db/client'
 import {
@@ -13,63 +13,74 @@ import {
 /**
  * tasks テーブルへのアクセス。
  *
- * Task は Move 経由で Household に属するので、単体の Task を引く関数は
- * `householdId` を受け取り `moves` との JOIN で絞り込む。
+ * Task は Move 経由で Household に属する。単体の Task を読み書きする関数は
+ * すべて `householdId` を必須で受け取り、SQL の条件に必ず含める。
+ * Use Case 側でスコープを付け忘れても型で気づけるようにするため。
+ *
+ * 対象が見つからない場合、Use Case 側は 403 ではなく 404 を返すこと。
+ * 403 と区別すると、その ID の Task が存在するかどうかが漏れてしまう。
  */
+
+/** その Task が指定 Household の Move に属するか、という条件。 */
+function belongsToHousehold(db: Db, householdId: string) {
+  return exists(
+    db
+      .select({ one: sql`1` })
+      .from(moves)
+      .where(
+        and(eq(moves.id, tasks.moveId), eq(moves.householdId, householdId)),
+      ),
+  )
+}
 
 /** sort_order 順の全テンプレート。 */
 export async function listTaskTemplates(db: Db): Promise<TaskTemplate[]> {
   return db.select().from(taskTemplates).orderBy(asc(taskTemplates.sortOrder))
 }
 
-export async function insertTasks(
-  db: Db,
-  values: NewTask[],
-): Promise<Task[]> {
+export async function insertTasks(db: Db, values: NewTask[]): Promise<Task[]> {
   if (values.length === 0) return []
 
-  return db.insert(tasks).values(values).returning()
+  return insertTasksStatement(db, values)
 }
 
-/** batch に載せるための insert 文。実行はしない。 */
+/** batch に載せるための insert 文。空配列は渡せない。 */
 export function insertTasksStatement(db: Db, values: NewTask[]) {
   return db.insert(tasks).values(values).returning()
 }
 
-/** Household スコープで Task を1件引く。他 Household のものは null。 */
-export async function findTaskInHousehold(
+/**
+ * Household スコープで Task を更新する。
+ * 対象が無い（他 Household を含む）場合は null。
+ */
+export async function updateTaskInHousehold(
   db: Db,
   householdId: string,
   taskId: string,
-): Promise<Task | null> {
-  const [row] = await db
-    .select({ task: tasks })
-    .from(tasks)
-    .innerJoin(moves, eq(moves.id, tasks.moveId))
-    .where(and(eq(tasks.id, taskId), eq(moves.householdId, householdId)))
-    .limit(1)
-
-  return row?.task ?? null
-}
-
-export async function listTasksByMove(db: Db, moveId: string): Promise<Task[]> {
-  return db.select().from(tasks).where(eq(tasks.moveId, moveId))
-}
-
-export async function updateTaskById(
-  db: Db,
-  taskId: string,
   values: Partial<Omit<NewTask, 'id' | 'moveId'>>,
-): Promise<Task> {
+): Promise<Task | null> {
   const [task] = await db
     .update(tasks)
     .set({ ...values, updatedAt: new Date() })
-    .where(eq(tasks.id, taskId))
+    .where(and(eq(tasks.id, taskId), belongsToHousehold(db, householdId)))
     .returning()
 
-  return task
+  return task ?? null
 }
 
-export async function deleteTaskById(db: Db, taskId: string): Promise<void> {
-  await db.delete(tasks).where(eq(tasks.id, taskId))
+/**
+ * Household スコープで Task を削除する。
+ * 削除できたら true、対象が無ければ false。
+ */
+export async function deleteTaskInHousehold(
+  db: Db,
+  householdId: string,
+  taskId: string,
+): Promise<boolean> {
+  const deleted = await db
+    .delete(tasks)
+    .where(and(eq(tasks.id, taskId), belongsToHousehold(db, householdId)))
+    .returning({ id: tasks.id })
+
+  return deleted.length > 0
 }

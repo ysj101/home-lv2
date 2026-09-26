@@ -1,10 +1,9 @@
-import { updateTaskById } from '@/db/repositories/task'
+import { updateTaskInHousehold } from '@/db/repositories/task'
 import type { Task } from '@/db/schema'
-import { badRequest } from '@/features/auth/errors'
+import { notFound } from '@/features/auth/errors'
 import type { HouseholdContext } from '@/features/auth/household-context'
-import { requireTask } from '@/features/task/require-task'
+import { requireTaskCategory, type TaskCategory } from '@/lib/task-category'
 import { optionalText, requireDate, requireText } from '@/lib/validation'
-import { TASK_CATEGORIES, type TaskCategory } from '@/lib/task-category'
 
 export type UpdateTaskInput = {
   title?: string
@@ -25,9 +24,7 @@ export async function updateTask(
   taskId: string,
   input: UpdateTaskInput,
 ): Promise<Task> {
-  await requireTask(context, taskId)
-
-  const values: Parameters<typeof updateTaskById>[2] = {}
+  const values: Parameters<typeof updateTaskInHousehold>[3] = {}
 
   if (input.title !== undefined) {
     values.title = requireText(input.title, 'タイトル')
@@ -36,14 +33,22 @@ export async function updateTask(
     values.description = optionalText(input.description)
   }
   if (input.category !== undefined) {
-    if (!TASK_CATEGORIES.includes(input.category)) {
-      throw badRequest(`不明なカテゴリです: ${input.category}`)
-    }
-    values.category = input.category
+    values.category = requireTaskCategory(input.category)
   }
   if (input.dueDate !== undefined) {
     values.dueDate = input.dueDate ? requireDate(input.dueDate, '期限') : null
   }
 
-  return updateTaskById(context.db, taskId, values)
+  const task = await updateTaskInHousehold(
+    context.db,
+    context.household.id,
+    taskId,
+    values,
+  )
+
+  if (!task) {
+    throw notFound('タスクが見つかりません。')
+  }
+
+  return task
 }
