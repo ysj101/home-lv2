@@ -1,8 +1,8 @@
 import { insertMoveStatement } from '@/db/repositories/move'
-import { insertTasksStatement, listTaskTemplates } from '@/db/repositories/task'
+import { insertTasksStatement } from '@/db/repositories/task'
 import type { Move, Task } from '@/db/schema'
 import type { HouseholdContext } from '@/features/auth/household-context'
-import { buildTasksFromTemplates } from '@/features/task/generate-tasks'
+import { buildMoveTasks } from '@/features/task/generate-tasks'
 import { optionalText, requireDate, requireText } from '@/lib/validation'
 
 export type CreateMoveInput = {
@@ -39,11 +39,10 @@ export async function createMove(
     id: crypto.randomUUID(),
   }
 
-  const templates = await listTaskTemplates(context.db)
-  const taskValues = buildTasksFromTemplates(
-    { id: values.id, moveDate: values.moveDate },
-    templates,
-  )
+  const taskValues = await buildMoveTasks(context.db, {
+    id: values.id,
+    moveDate: values.moveDate,
+  })
 
   if (taskValues.length === 0) {
     const [move] = await insertMoveStatement(context.db, values)
