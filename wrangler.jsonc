@@ -4,6 +4,14 @@
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
+  "vars": {
+    // #11 で Cloudflare Access を設定したら実際の値を入れる。
+    // 空のままだと認証は fail closed（DEV_USER_EMAIL が無い限り常に 401）。
+    "CF_ACCESS_TEAM_DOMAIN": "",
+    "CF_ACCESS_AUD": "",
+    // ローカル開発専用のバイパス。.dev.vars で上書きする。本番は空のままにすること。
+    "DEV_USER_EMAIL": ""
+  },
   "d1_databases": [
     {
       "binding": "DB",
