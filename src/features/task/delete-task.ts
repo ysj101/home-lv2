@@ -1,6 +1,6 @@
-import { deleteTaskById } from '@/db/repositories/task'
+import { deleteTaskInHousehold } from '@/db/repositories/task'
+import { notFound } from '@/features/auth/errors'
 import type { HouseholdContext } from '@/features/auth/household-context'
-import { requireTask } from '@/features/task/require-task'
 
 /**
  * Task を物理削除する。
@@ -12,7 +12,13 @@ export async function deleteTask(
   context: HouseholdContext,
   taskId: string,
 ): Promise<void> {
-  await requireTask(context, taskId)
+  const deleted = await deleteTaskInHousehold(
+    context.db,
+    context.household.id,
+    taskId,
+  )
 
-  await deleteTaskById(context.db, taskId)
+  if (!deleted) {
+    throw notFound('タスクが見つかりません。')
+  }
 }
