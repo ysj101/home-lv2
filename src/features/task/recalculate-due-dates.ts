@@ -1,6 +1,8 @@
-import { and, eq, inArray } from 'drizzle-orm'
-
-import { taskTemplates, tasks, type Task } from '@/db/schema'
+import {
+  listTemplateTasksInHousehold,
+  updateTaskDueDatesInHousehold,
+} from '@/db/repositories/task'
+import type { Task } from '@/db/schema'
 import type { HouseholdContext } from '@/features/auth/household-context'
 import { requireMove } from '@/features/move/require-move'
 import { addDays } from '@/lib/date'
@@ -45,26 +47,15 @@ export function computeDueDateChanges(
 }
 
 /** 対象 Task とテンプレートの offset_days を引く。 */
-async function findTemplateTasks(
+function findTemplateTasks(
   context: HouseholdContext,
   moveId: string,
 ): Promise<TemplateTask[]> {
-  return context.db
-    .select({
-      id: tasks.id,
-      title: tasks.title,
-      dueDate: tasks.dueDate,
-      offsetDays: taskTemplates.offsetDays,
-    })
-    .from(tasks)
-    .innerJoin(taskTemplates, eq(taskTemplates.id, tasks.templateId))
-    .where(
-      and(
-        eq(tasks.moveId, moveId),
-        eq(tasks.source, 'template'),
-        eq(tasks.status, 'todo'),
-      ),
-    )
+  return listTemplateTasksInHousehold(
+    context.db,
+    context.household.id,
+    moveId,
+  )
 }
 
 /**
@@ -112,11 +103,12 @@ export async function recalculateTemplateTaskDueDates(
 
   const updated = await Promise.all(
     Array.from(idsByDueDate, ([dueDate, ids]) =>
-      context.db
-        .update(tasks)
-        .set({ dueDate, updatedAt: new Date() })
-        .where(inArray(tasks.id, ids))
-        .returning(),
+      updateTaskDueDatesInHousehold(
+        context.db,
+        context.household.id,
+        ids,
+        dueDate,
+      ),
     ),
   )
 
