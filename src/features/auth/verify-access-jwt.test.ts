@@ -109,6 +109,20 @@ describe('verifyAccessJwt', () => {
     ).rejects.toMatchObject({ status: 401 })
   })
 
+  it('exp が無いトークンは 401（無期限を受け入れない）', async () => {
+    stubJwksFetch()
+    const token = await new SignJWT({ email: EMAIL })
+      .setProtectedHeader({ alg: 'RS256', kid: 'test-key' })
+      .setIssuedAt()
+      .setIssuer(`https://${TEAM_DOMAIN}`)
+      .setAudience(AUD)
+      .sign(privateKey)
+
+    await expect(
+      verifyAccessJwt(requestWithToken(token), config),
+    ).rejects.toMatchObject({ status: 401 })
+  })
+
   it('email クレームが無ければ 401', async () => {
     stubJwksFetch()
     const token = await new SignJWT({})
