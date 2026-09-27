@@ -4,20 +4,25 @@ import type { AccessConfig } from '@/features/auth/verify-access-jwt'
 export type AccessEnv = {
   CF_ACCESS_TEAM_DOMAIN?: string
   CF_ACCESS_AUD?: string
+  /** ローカル開発専用。`.dev.vars` に置く。本番ビルドでは読まれない。 */
   DEV_USER_EMAIL?: string
 }
 
 /**
  * 環境変数から Access の設定を読む。
  *
- * `DEV_USER_EMAIL` が設定されていればローカル開発用のバイパスとして扱い、
- * そうでなければ Team domain と AUD の両方を必須にする（fail closed）。
- * 本番の Worker に `DEV_USER_EMAIL` を設定しないこと。
+ * Team domain と AUD の両方が揃わない限り必ず失敗する（fail closed）。
  */
 export function readAccessConfig(env: AccessEnv): AccessConfig {
-  const devUserEmail = env.DEV_USER_EMAIL?.trim()
-  if (devUserEmail) {
-    return { teamDomain: '', aud: '', devUserEmail }
+  // 開発ビルドでのみ評価される。Vite が本番ビルドで import.meta.env.DEV を
+  // false に畳むため、このブロックごとデプロイ物から消える。設定値の入れ間違いで
+  // 本番の認証が無効になることがないよう、値ではなくビルドで遮断する。
+  if (import.meta.env.DEV) {
+    const devUserEmail = env.DEV_USER_EMAIL?.trim()
+
+    if (devUserEmail) {
+      return { teamDomain: '', aud: '', devUserEmail }
+    }
   }
 
   const teamDomain = env.CF_ACCESS_TEAM_DOMAIN?.trim()
