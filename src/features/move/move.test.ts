@@ -34,7 +34,7 @@ afterEach(() => db.close())
 
 describe('createMove', () => {
   it('現在 Household の Move を作成する', async () => {
-    const move = await createMove(context, input)
+    const { move } = await createMove(context, input)
 
     expect(move).toMatchObject({
       householdId: 'h1',
@@ -47,7 +47,7 @@ describe('createMove', () => {
   })
 
   it('引越し名の前後の空白を落とす', async () => {
-    const move = await createMove(context, { ...input, name: '  Home Lv.2  ' })
+    const { move } = await createMove(context, { ...input, name: '  Home Lv.2  ' })
 
     expect(move.name).toBe('Home Lv.2')
   })
@@ -71,7 +71,7 @@ describe('createMove', () => {
   })
 
   it('住所は任意（空なら null）', async () => {
-    const move = await createMove(context, {
+    const { move } = await createMove(context, {
       name: 'Home Lv.2',
       moveDate: '2026-11-15',
     })
@@ -101,7 +101,7 @@ describe('getMove', () => {
 
 describe('updateMove', () => {
   it('渡した項目だけを更新する', async () => {
-    const move = await createMove(context, input)
+    const { move } = await createMove(context, input)
 
     const updated = await updateMove(context, move.id, { name: 'Home Lv.3' })
 
@@ -113,7 +113,7 @@ describe('updateMove', () => {
   })
 
   it('引越し日を更新できる', async () => {
-    const move = await createMove(context, input)
+    const { move } = await createMove(context, input)
 
     expect(
       await updateMove(context, move.id, { moveDate: '2026-12-01' }),
@@ -121,7 +121,7 @@ describe('updateMove', () => {
   })
 
   it('住所を空にすると null になる', async () => {
-    const move = await createMove(context, input)
+    const { move } = await createMove(context, input)
 
     expect(
       await updateMove(context, move.id, { oldAddress: '' }),
@@ -129,7 +129,7 @@ describe('updateMove', () => {
   })
 
   it('updated_at が進む', async () => {
-    const move = await createMove(context, input)
+    const { move } = await createMove(context, input)
 
     const updated = await updateMove(context, move.id, { name: 'Home Lv.3' })
 
@@ -139,7 +139,7 @@ describe('updateMove', () => {
   })
 
   it('不正な値は 400', async () => {
-    const move = await createMove(context, input)
+    const { move } = await createMove(context, input)
 
     await expect(
       updateMove(context, move.id, { name: '' }),
@@ -150,7 +150,7 @@ describe('updateMove', () => {
   })
 
   it('他 Household の Move は更新できない（404）', async () => {
-    const theirMove = await createMove(otherContext, input)
+    const { move: theirMove } = await createMove(otherContext, input)
 
     await expect(
       updateMove(context, theirMove.id, { name: 'Hijacked' }),
