@@ -12,23 +12,34 @@ Repository / Database
 
 ## Household スコープの原則
 
-Move / Task の Use Case は、引数の先頭で `HouseholdContext`（`auth/household-context.ts`）を受け取り、
-**必ず `context.household.id` でスコープした条件を付けて** DB を操作する。
+Move / Task の Use Case は、引数の先頭で `HouseholdContext`（`auth/household-context.ts`）を受け取る。
+生の `Db` だけを受け取る Use Case は作らないこと。
+
+スコープの強制は**規約ではなく Repository 層の型**で行う。`db/repositories/*.ts` の
+読み書き関数はすべて `householdId` を必須引数に取り、SQL の条件に必ず含める。
 
 ```ts
-export async function getMove(context: HouseholdContext) {
-  return context.db
-    .select()
-    .from(moves)
-    .where(eq(moves.householdId, context.household.id)) // ← 必須
-}
+// repositories: householdId が無いと呼べない
+updateTaskInHousehold(db, householdId, taskId, values): Promise<Task | null>
+
+// use case: null を 404 に変換するだけ
+const task = await updateTaskInHousehold(
+  context.db,
+  context.household.id,
+  taskId,
+  values,
+)
+if (!task) throw notFound('タスクが見つかりません。')
 ```
 
 理由は `docs/spec.md` §25 Data Integrity の「User が所属する Household 以外のデータへ
-アクセスできない」。ID を受け取って更新・削除する Use Case では、更新条件にも
-`householdId` を含めるか、対象を読み直して所属を検証してから操作する。
+アクセスできない」。「呼ぶ前に所属を確認する」という約束だと、確認を1行忘れても
+コンパイルが通ってしまう。
 
-生の `Db` だけを受け取る Use Case は作らないこと。スコープを付け忘れても型で気づけなくなる。
+対象が見つからないときは **403 ではなく 404** を返す。403 と区別すると、その ID の
+データが存在するかどうかが漏れる。
+
+Move を丸ごと1件引きたい場合は `move/require-move.ts` の `requireMove()` を使う。
 
 ## 認証の入口
 
