@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { taskTemplates, tasks, type Task } from '@/db/schema'
+import { moves, taskTemplates, tasks, type Task } from '@/db/schema'
 import { createTestDb, type TestDb } from '@/db/test-db'
 import type { HouseholdContext } from '@/features/auth/household-context'
 import { createTestContext } from '@/features/auth/test-context'
@@ -179,5 +179,43 @@ describe('recalculateTemplateTaskDueDates', () => {
     await expect(
       recalculateTemplateTaskDueDates(other, moveId),
     ).rejects.toMatchObject({ status: 404 })
+  })
+})
+
+describe('Household スコープ', () => {
+  it('他 Household の Task は再計算の対象に入らない', async () => {
+    const other = await createTestContext(db, {
+      householdId: 'h2',
+      userId: 'u2',
+      email: 'other@example.com',
+    })
+    const [theirMove] = await db
+      .insert(moves)
+      .values({ householdId: 'h2', name: 'Their Move', moveDate: '2026-11-15' })
+      .returning()
+    await db.insert(tasks).values({
+      moveId: theirMove.id,
+      title: '他人のテンプレタスク',
+      category: 'utility',
+      dueDate: '2026-11-08',
+      source: 'template',
+      status: 'todo',
+      templateId: 'electricity',
+    })
+
+    // 自分の Household から相手の moveId を指定しても 404。
+    await expect(
+      previewRecalculation(context, theirMove.id, NEW_MOVE_DATE),
+    ).rejects.toMatchObject({ status: 404 })
+
+    // 自分の Move の再計算で相手の Task が巻き込まれない。
+    await updateMove(context, moveId, { moveDate: NEW_MOVE_DATE })
+    await recalculateTemplateTaskDueDates(context, moveId)
+
+    const theirs = (await db.select().from(tasks)).find(
+      (task) => task.moveId === theirMove.id,
+    )
+    expect(theirs?.dueDate).toBe('2026-11-08')
+    void other
   })
 })
