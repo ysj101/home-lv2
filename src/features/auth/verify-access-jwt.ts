@@ -74,6 +74,11 @@ export async function verifyAccessJwt(
     ;({ payload } = await jwtVerify(token, getJwks(config.teamDomain), {
       issuer: `https://${config.teamDomain}`,
       audience: config.aud,
+      // Access が使う署名アルゴリズムに限定する。
+      algorithms: ['RS256', 'ES256'],
+      // jose は exp が「ある場合のみ」期限を見るので、無期限トークンを
+      // 受け入れないよう存在自体を必須にする。
+      requiredClaims: ['exp', 'iat'],
     }))
   } catch (cause) {
     throw unauthorized(
