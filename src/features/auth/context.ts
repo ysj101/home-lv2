@@ -1,26 +1,24 @@
 import { env } from 'cloudflare:workers'
 import { getRequest } from '@tanstack/react-start/server'
 
-import { createDb, type Db } from '@/db/client'
-import type { User } from '@/db/schema'
+import { createDb } from '@/db/client'
 import { readAccessConfig } from '@/features/auth/access-config'
-import { getCurrentUser } from '@/features/auth/get-current-user'
+import {
+  resolveHouseholdContext,
+  type HouseholdContext,
+} from '@/features/auth/household-context'
 import { verifyAccessJwt } from '@/features/auth/verify-access-jwt'
 
 /**
- * Server Function から現在ユーザーを取得するための配線。
+ * Server Function の入口。Workers のバインディングとリクエストに触る薄い配線層で、
+ * ロジックは verifyAccessJwt / resolveHouseholdContext 側に置く。
  *
- * Workers のバインディングとリクエストに触る薄い層なので、ロジックは
- * `verifyAccessJwt` / `getCurrentUser` 側に置き、そちらをテストする。
+ * すべての Server Function はまずこれを呼び、返ってきたコンテキスト経由でのみ
+ * DB を操作すること。
  */
-export type AuthContext = {
-  db: Db
-  user: User
-}
-
-export async function requireUser(): Promise<AuthContext> {
+export async function requireContext(): Promise<HouseholdContext> {
   const db = createDb(env.DB)
   const email = await verifyAccessJwt(getRequest(), readAccessConfig(env))
 
-  return { db, user: await getCurrentUser(db, email) }
+  return resolveHouseholdContext(db, email)
 }
