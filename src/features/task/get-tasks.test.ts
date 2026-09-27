@@ -160,3 +160,17 @@ describe('getTasks', () => {
     ])
   })
 })
+
+describe('入力検証', () => {
+  it('today が YYYY-MM-DD でなければ 400', async () => {
+    await expect(
+      getTasks(context, { today: '2026/11/01' }),
+    ).rejects.toMatchObject({ status: 400 })
+  })
+
+  it('実在しない日付は 400', async () => {
+    await expect(
+      getTasks(context, { today: '2026-02-30' }),
+    ).rejects.toMatchObject({ status: 400 })
+  })
+})

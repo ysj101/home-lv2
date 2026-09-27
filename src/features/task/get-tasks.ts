@@ -14,6 +14,7 @@ import type { SQL } from 'drizzle-orm'
 import { moves, tasks, users, type Task } from '@/db/schema'
 import type { HouseholdContext } from '@/features/auth/household-context'
 import { requireTaskCategory, type TaskCategory } from '@/lib/task-category'
+import { requireDate } from '@/lib/validation'
 
 /**
  * Task 一覧を取得する（spec §12.2）。
@@ -86,6 +87,7 @@ export async function getTasks(
   context: HouseholdContext,
   filter: GetTasksFilter,
 ): Promise<TaskListItem[]> {
+  const today = requireDate(filter.today, '基準日')
   if (filter.category) requireTaskCategory(filter.category)
 
   const rows = await context.db
@@ -101,7 +103,7 @@ export async function getTasks(
     .where(
       and(
         eq(moves.householdId, context.household.id),
-        statusCondition(filter.status, filter.today),
+        statusCondition(filter.status, today),
         assigneeCondition(filter.assignee, context.user.id),
         filter.category ? eq(tasks.category, filter.category) : undefined,
       ),
