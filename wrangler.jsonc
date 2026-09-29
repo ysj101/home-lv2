@@ -5,7 +5,8 @@
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
   "vars": {
-    // #11 で Cloudflare Access を設定したら実際の値を入れる。
+    // Cloudflare Access の Team domain と AUD タグ。取得方法は docs/cloudflare-access.md。
+    // どちらもシークレットではないのでここにコミットしてよい。
     // 空のままだと認証は fail closed（常に 401）。
     // ローカル開発用の DEV_USER_EMAIL はここには置かない。.dev.vars に書く
     // （本番ビルドでは読み取り自体がコードから消えるため設定しても効かない）。
