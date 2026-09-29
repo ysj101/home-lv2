@@ -24,3 +24,5 @@ src/routeTree.gen.ts
 # wrangler のローカルシークレット（seed 用のメールアドレスなど）
 .dev.vars
 .dev.vars.*
+# テンプレートだけはコミットする
+!.dev.vars.example
