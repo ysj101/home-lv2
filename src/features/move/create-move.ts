@@ -1,5 +1,5 @@
 import { insertMoveStatement } from '@/db/repositories/move'
-import { insertTasksStatement } from '@/db/repositories/task'
+import { insertTasksStatements } from '@/db/repositories/task'
 import type { Move, Task } from '@/db/schema'
 import type { HouseholdContext } from '@/features/auth/household-context'
 import { buildMoveTasks } from '@/features/task/generate-tasks'
@@ -44,16 +44,18 @@ export async function createMove(
     moveDate: values.moveDate,
   })
 
-  if (taskValues.length === 0) {
+  const taskStatements = insertTasksStatements(context.db, taskValues)
+
+  if (taskStatements.length === 0) {
     const [move] = await insertMoveStatement(context.db, values)
 
     return { move, tasks: [] }
   }
 
-  const [createdMoves, createdTasks] = await context.db.batch([
+  const [createdMoves, ...createdTaskChunks] = await context.db.batch([
     insertMoveStatement(context.db, values),
-    insertTasksStatement(context.db, taskValues),
+    ...taskStatements,
   ])
 
-  return { move: createdMoves[0], tasks: createdTasks }
+  return { move: createdMoves[0], tasks: createdTaskChunks.flat() }
 }

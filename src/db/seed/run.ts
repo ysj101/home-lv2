@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -10,6 +10,24 @@ import {
 import { buildTaskTemplateSeedStatements } from '@/db/seed/task-templates'
 
 const DATABASE_NAME = 'home-lv2-db'
+
+/**
+ * ローカル開発では wrangler と同じ `.dev.vars` を設定元にする。
+ * 既に環境変数がある場合はそちらを優先する（CI はシークレットから渡す）。
+ */
+function loadDevVars() {
+  if (!existsSync('.dev.vars')) return
+
+  for (const line of readFileSync('.dev.vars', 'utf8').split('\n')) {
+    const matched = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/)
+    if (!matched) continue
+
+    const [, key, rawValue] = matched
+    if (process.env[key]) continue
+
+    process.env[key] = rawValue.trim().replace(/^["']|["']$/g, '')
+  }
+}
 
 /**
  * seed の入力は環境変数から読む。
@@ -47,6 +65,8 @@ function readHouseholdSeedConfig(): HouseholdSeedConfig {
  * 各 seed は冪等なので、何度実行しても件数は増えない。
  */
 function main() {
+  loadDevVars()
+
   const target = process.argv.includes('--remote') ? '--remote' : '--local'
 
   const statements = [

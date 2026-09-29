@@ -5,6 +5,8 @@ const baseURL = `http://localhost:${PORT}`
 
 export default defineConfig({
   testDir: './e2e',
+  // 毎回ローカル D1 を作り直してから始める。
+  globalSetup: './e2e/global-setup.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -26,7 +28,8 @@ export default defineConfig({
   webServer: {
     command: 'pnpm dev',
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    // 毎回 DB を作り直すので、古い接続を掴んだサーバーを使い回さない。
+    reuseExistingServer: false,
     timeout: 120 * 1000,
   },
 })
