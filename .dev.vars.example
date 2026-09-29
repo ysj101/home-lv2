@@ -1,27 +1,11 @@
-# ローカル開発用の環境変数テンプレート。
-# コピーして `.dev.vars` を作る（`.dev.vars` は gitignore 済み）。
-#
-#   cp .dev.vars.example .dev.vars
-#
-# `pnpm dev`（@cloudflare/vite-plugin）と `wrangler dev` が読み込む。
-# 手順の詳細は docs/cloudflare-access.md を参照。
+# ローカル開発用の設定。このファイルを `.dev.vars` にコピーして値を埋める。
+# `.dev.vars` は .gitignore 済みで、wrangler deploy でもアップロードされない。
 
-# --- Cloudflare Access（docs/cloudflare-access.md）---------------------------
-# ローカルでは Cloudflare Access を通らないので、代わりにこのメールアドレスを
-# 認証済みとして扱う。seed した Adult A / B のどちらかを入れる。
-# 本番ビルドではこの値を読むコード自体が消えるため、本番には効かない。
-DEV_USER_EMAIL=adult-a@example.com
+# Cloudflare Access を通さずに開発するためのバイパス。
+# ここに書いたメールアドレスで認証済みとして扱われる（seed した users の email）。
+# 本番ビルドではこの分岐自体がコードから消えるため、設定しても効かない。
+DEV_USER_EMAIL="adult-a@example.com"
 
-# 本番と同じ JWT 検証をローカルで試したいときだけ設定する（DEV_USER_EMAIL を空にする）。
-# 値は Zero Trust ダッシュボードから取得する。
-# CF_ACCESS_TEAM_DOMAIN=your-team.cloudflareaccess.com
-# CF_ACCESS_AUD=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-
-# --- seed（pnpm db:seed:local / db:seed:remote）------------------------------
-# Access Policy に登録するメールアドレスと同じものを入れること。
-# 認証は通るのに users に無いと 403 になる（features/README.md「認証の入口」）。
-SEED_ADULT_A_EMAIL=adult-a@example.com
-SEED_ADULT_A_NAME=Adult A
-SEED_ADULT_B_EMAIL=adult-b@example.com
-SEED_ADULT_B_NAME=Adult B
-SEED_HOUSEHOLD_NAME=Our Family
+# seed（pnpm db:seed:local）で投入する家族のメールアドレス。
+SEED_ADULT_A_EMAIL="adult-a@example.com"
+SEED_ADULT_B_EMAIL="adult-b@example.com"
