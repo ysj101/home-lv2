@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Field, FormError } from '@/components/field'
 import { PageTitle } from '@/components/page-title'
 import { HydratedButton } from '@/components/hydrated'
+import { RecalculationDialog } from '@/components/recalculation-dialog'
 import {
   Card,
   CardContent,
@@ -13,9 +14,12 @@ import {
 import { Input } from '@/components/ui/input'
 import {
   fetchMove,
+  fetchRecalculationPreview,
   submitCreateMove,
+  submitRecalculation,
   submitUpdateMove,
 } from '@/features/move/server'
+import type { DueDateChange } from '@/features/task/recalculate-due-dates'
 
 export const Route = createFileRoute('/settings')({
   loader: () => fetchMove(),
@@ -27,6 +31,10 @@ function MoveSettings() {
   const router = useRouter()
   const [error, setError] = useState<unknown>(null)
   const [saving, setSaving] = useState(false)
+  // 引越し日を変えたときに出す確認。null ならダイアログを開かない。
+  const [pendingChanges, setPendingChanges] = useState<DueDateChange[] | null>(
+    null,
+  )
 
   const isCreate = move === null
 
@@ -46,9 +54,37 @@ function MoveSettings() {
     try {
       if (isCreate) {
         await submitCreateMove({ data: input })
-      } else {
-        await submitUpdateMove({ data: { moveId: move.id, input } })
+        await router.invalidate()
+        return
       }
+
+      // 引越し日が変わるなら、期限がずれる Quest を先に見せる。
+      const changes =
+        input.moveDate !== move.moveDate
+          ? await fetchRecalculationPreview({
+              data: { moveId: move.id, newMoveDate: input.moveDate },
+            })
+          : []
+
+      await submitUpdateMove({ data: { moveId: move.id, input } })
+      await router.invalidate()
+
+      // 対象が0件ならダイアログは出さない。
+      if (changes.length > 0) setPendingChanges(changes)
+    } catch (cause) {
+      setError(cause)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function applyRecalculation() {
+    if (!move) return
+
+    setSaving(true)
+    try {
+      await submitRecalculation({ data: { moveId: move.id } })
+      setPendingChanges(null)
       await router.invalidate()
     } catch (cause) {
       setError(cause)
@@ -119,6 +155,13 @@ function MoveSettings() {
           </HydratedButton>
         </form>
       </CardContent>
+
+      <RecalculationDialog
+        changes={pendingChanges}
+        busy={saving}
+        onApply={applyRecalculation}
+        onSkip={() => setPendingChanges(null)}
+      />
     </Card>
   )
 }
