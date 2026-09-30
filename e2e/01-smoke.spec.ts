@@ -24,11 +24,4 @@ test('ボトムナビで3画面を行き来できる', async ({ page }) => {
   await expect(page).toHaveURL(/\/$/)
 })
 
-test('スマートフォン幅で横スクロールが出ない', async ({ page }) => {
-  await page.goto('/')
-
-  const overflows = await page.evaluate(
-    () => document.documentElement.scrollWidth > window.innerWidth + 1,
-  )
-  expect(overflows).toBe(false)
-})
+// モバイル幅の検証は 12-responsive.spec.ts がまとめて担当する。

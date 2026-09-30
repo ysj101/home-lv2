@@ -17,4 +17,24 @@
 06-task-detail    編集・削除する（件数が減る）
 ```
 
+```
+07-complete-toggle  完了 / 再オープン
+08-assignee         担当者の設定
+09-dashboard        Main Quest / 進捗
+10-dashboard-lists  Dashboard の4セクション
+11-recalculation    引越し日変更時の期限再計算
+12-responsive       モバイル幅のレイアウト
+```
+
 件数を足し引きする spec（05 以降）では、絶対値ではなく実行前との差で検証する。
+
+## プロジェクトの役割
+
+DB は global-setup で1回だけ作り直すので、全 spec を複数プロジェクトで回すと
+2周目はデータが残った状態で走ってしまう。そのため役割を分けている。
+
+| project | 幅 | 対象 |
+|---|---|---|
+| `desktop-chromium` | - | 全 spec（機能の検証） |
+| `mobile-safari` | 390px | `12-responsive` のみ |
+| `mobile-small` | 375px | `12-responsive` のみ |
