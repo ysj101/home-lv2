@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { addDays, daysBetween, today } from '@/lib/date'
+import { addDays, daysBetween, toMonthDay, today } from '@/lib/date'
 
 describe('addDays', () => {
   it('引越し日から offset_days 分ずらした期限を返す', () => {
@@ -38,5 +38,15 @@ describe('today', () => {
 
   it('JST の日中はそのままの日付', () => {
     expect(today(new Date('2026-11-15T03:00:00Z'))).toBe('2026-11-15')
+  })
+})
+
+describe('toMonthDay', () => {
+  it('YYYY-MM-DD を M/D にする', () => {
+    expect(toMonthDay('2026-11-08')).toBe('11/8')
+  })
+
+  it('0埋めを外す', () => {
+    expect(toMonthDay('2026-01-05')).toBe('1/5')
   })
 })

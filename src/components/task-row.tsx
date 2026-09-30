@@ -3,17 +3,9 @@ import { Link } from '@tanstack/react-router'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { TaskListItem } from '@/features/task/get-tasks'
 import { isOverdue } from '@/lib/dashboard'
+import { toMonthDay } from '@/lib/date'
 import { categoryLabel } from '@/lib/task-category'
 import { cn } from '@/lib/utils'
-
-/** 期限を M/D で表示する。期限なしは null。 */
-function formatDueDate(dueDate: string | null): string | null {
-  if (!dueDate) return null
-
-  const [, month, day] = dueDate.split('-')
-
-  return `${Number(month)}/${Number(day)}`
-}
 
 export function TaskRow({
   task,
@@ -23,7 +15,7 @@ export function TaskRow({
   today: string
 }) {
   const overdue = isOverdue(task, today)
-  const due = formatDueDate(task.dueDate)
+  const due = task.dueDate ? toMonthDay(task.dueDate) : null
   const completed = task.status === 'completed'
 
   return (
