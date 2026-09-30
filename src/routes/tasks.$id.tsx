@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 
+import { AssigneeSelect } from '@/components/assignee-select'
+import { Field } from '@/components/field'
 import { HydratedButton } from '@/components/hydrated'
 import { PageTitle } from '@/components/page-title'
 import { TaskForm } from '@/components/task-form'
@@ -100,8 +102,16 @@ function TaskDetail() {
             </span>
           </CardDescription>
         </CardHeader>
-        <CardContent className="pb-0">
+        <CardContent className="space-y-5 pb-0">
           <CompleteToggle task={task} />
+
+          <Field id="assignee" label="担当">
+            <AssigneeSelect
+              taskId={task.id}
+              assigneeId={task.assigneeId}
+              members={members}
+            />
+          </Field>
         </CardContent>
         <CardContent>
           <TaskForm
