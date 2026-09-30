@@ -4,6 +4,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { HttpError } from '@/features/auth/errors'
 import {
   clearJwksCache,
+  resetBypassWarning,
   verifyAccessJwt,
 } from '@/features/auth/verify-access-jwt'
 
@@ -25,6 +26,7 @@ beforeAll(async () => {
 afterEach(() => {
   vi.unstubAllGlobals()
   clearJwksCache()
+  resetBypassWarning()
 })
 
 /** Cloudflare の JWKS エンドポイントを模した fetch を仕込む。 */

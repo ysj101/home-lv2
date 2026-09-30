@@ -39,12 +39,17 @@ test('各行にタイトル・期限・担当・カテゴリが出る', async ({
   await expect(row).toContainText('電気・ガス・水道')
 })
 
-test('行をタップすると詳細へ遷移する', async ({ page }) => {
+test('行をタップすると詳細が開く', async ({ page }) => {
   await page.goto('/tasks')
 
   await page.getByRole('link', { name: /引越し業者の見積もりを取る/ }).click()
 
   await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]{36}$/)
+  // URL だけでなく、詳細の中身が出ていることまで確かめる。
+  await expect(
+    page.getByRole('heading', { name: '引越し業者の見積もりを取る' }),
+  ).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Quest 一覧' })).toHaveCount(0)
 })
 
 test('期限超過の Quest が強調される', async ({ page }) => {
