@@ -25,14 +25,14 @@ test('標準 Quest が一覧に並ぶ', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: 'Quests' })).toBeVisible()
   // seed の標準テンプレートは25件。
-  await expect(page.getByRole('main').getByRole('listitem')).toHaveCount(25)
+  await expect(page.getByRole('list', { name: 'Quest 一覧' }).getByRole('listitem')).toHaveCount(25)
   await expect(page.getByText('全 25 件のうち 25 件が残っています。')).toBeVisible()
 })
 
 test('各行にタイトル・期限・担当・カテゴリが出る', async ({ page }) => {
   await page.goto('/tasks')
 
-  const row = page.getByRole('main').getByRole('listitem').filter({ hasText: '電気の停止・開始手続き' })
+  const row = page.getByRole('list', { name: 'Quest 一覧' }).getByRole('listitem').filter({ hasText: '電気の停止・開始手続き' })
 
   await expect(row).toContainText('期限 11/8')
   await expect(row).toContainText('未割当')

@@ -50,7 +50,7 @@ function TaskList() {
             Quest を追加するか、引越し日を設定して標準 Quest を作ってください。
           </p>
         ) : (
-          <ul className="-mt-3">
+          <ul aria-label="Quest 一覧" className="-mt-3">
             {tasks.map((task) => (
               <TaskRow key={task.id} task={task} today={currentDate} />
             ))}
