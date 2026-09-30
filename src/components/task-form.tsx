@@ -21,11 +21,18 @@ export function TaskForm({
   defaultValues,
   submitLabel,
   onSubmit,
+  /**
+   * 担当を含めるか。担当変更は UC-04（assignTask）という別のユースケースで、
+   * updateTask は担当に触らない。編集画面で出すと変更が黙って捨てられるので、
+   * 追加フォームでだけ出す（編集画面の担当変更は #36 で入れる）。
+   */
+  showAssignee = true,
 }: {
   members: HouseholdMemberSummary[]
   defaultValues?: Partial<CreateTaskInput>
   submitLabel: string
   onSubmit: (input: CreateTaskInput) => Promise<void>
+  showAssignee?: boolean
 }) {
   // shadcn（Radix）の Select は native select と違って FormData に載らないので、
   // この2つだけ state で持ち、残りは defaultValue + FormData で扱う。
@@ -107,21 +114,23 @@ export function TaskForm({
         />
       </Field>
 
-      <Field id="assignee" label="担当">
-        <HydratedSelect value={assigneeId} onValueChange={setAssigneeId}>
-          <SelectTrigger id="assignee" aria-label="担当" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={UNASSIGNED}>未割当</SelectItem>
-            {members.map((member) => (
-              <SelectItem key={member.id} value={member.id}>
-                {member.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </HydratedSelect>
-      </Field>
+      {showAssignee ? (
+        <Field id="assignee" label="担当">
+          <HydratedSelect value={assigneeId} onValueChange={setAssigneeId}>
+            <SelectTrigger id="assignee" aria-label="担当" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={UNASSIGNED}>未割当</SelectItem>
+              {members.map((member) => (
+                <SelectItem key={member.id} value={member.id}>
+                  {member.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </HydratedSelect>
+        </Field>
+      ) : null}
 
       <FormError error={error} />
 

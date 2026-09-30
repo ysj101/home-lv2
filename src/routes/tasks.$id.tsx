@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 
-import { HydratedButton } from '@/components/hydrated-button'
+import { HydratedButton } from '@/components/hydrated'
 import { PageTitle } from '@/components/page-title'
 import { TaskForm } from '@/components/task-form'
 import {
@@ -16,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { fetchHouseholdMembers } from '@/features/auth/server'
 import {
-  fetchHouseholdMembers,
   fetchTask,
   submitDeleteTask,
   submitUpdateTask,
@@ -40,7 +40,7 @@ function TaskDetail() {
   const { task, members } = Route.useLoaderData()
   const router = useRouter()
   const navigate = useNavigate()
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   if (!task) {
     return (
@@ -80,6 +80,7 @@ function TaskDetail() {
               dueDate: task.dueDate ?? '',
               assigneeId: task.assigneeId,
             }}
+            showAssignee={false}
             submitLabel="保存する"
             onSubmit={async (input) => {
               await submitUpdateTask({
@@ -102,12 +103,12 @@ function TaskDetail() {
       <HydratedButton
         variant="outline"
         className="w-full text-destructive"
-        onClick={() => setConfirmingDelete(true)}
+        onClick={() => setDeleteOpen(true)}
       >
         この Quest を削除する
       </HydratedButton>
 
-      <Dialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>この Quest を削除しますか？</DialogTitle>
@@ -119,7 +120,7 @@ function TaskDetail() {
             <HydratedButton
               variant="outline"
               className="flex-1"
-              onClick={() => setConfirmingDelete(false)}
+              onClick={() => setDeleteOpen(false)}
             >
               やめる
             </HydratedButton>

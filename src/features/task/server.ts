@@ -3,7 +3,11 @@ import { createServerFn } from '@tanstack/react-start'
 import { requireContext } from '@/features/auth/context'
 import { createTask, type CreateTaskInput } from '@/features/task/create-task'
 import { deleteTask } from '@/features/task/delete-task'
-import { getTasks, type GetTasksFilter } from '@/features/task/get-tasks'
+import {
+  getTask,
+  getTasks,
+  type GetTasksFilter,
+} from '@/features/task/get-tasks'
 import { updateTask, type UpdateTaskInput } from '@/features/task/update-task'
 import { today } from '@/lib/date'
 
@@ -25,18 +29,10 @@ export const submitCreateTask = createServerFn({ method: 'POST' })
   .validator((data: CreateTaskInput) => data)
   .handler(async ({ data }) => createTask(await requireContext(), data))
 
-/**
- * 詳細用に1件だけ取る。
- * 一覧と同じ形（担当者名つき）で返したいので getTasks から絞り込む。
- */
+/** 詳細用に1件だけ取る。 */
 export const fetchTask = createServerFn()
   .validator((data: { id: string }) => data)
-  .handler(async ({ data }) => {
-    const context = await requireContext()
-    const tasks = await getTasks(context, { today: today() })
-
-    return tasks.find((task) => task.id === data.id) ?? null
-  })
+  .handler(async ({ data }) => getTask(await requireContext(), data.id))
 
 export const submitUpdateTask = createServerFn({ method: 'POST' })
   .validator((data: { id: string; input: UpdateTaskInput }) => data)

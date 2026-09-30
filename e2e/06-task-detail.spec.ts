@@ -1,23 +1,12 @@
 import { expect, test } from '@playwright/test'
 
-test.describe.configure({ mode: 'serial' })
+import { ensureMoveRegistered, questRows } from './helpers'
 
-const rows = (page: import('@playwright/test').Page) =>
-  page.getByRole('list', { name: 'Quest 一覧' }).getByRole('listitem')
+test.describe.configure({ mode: 'serial' })
 
 test.beforeAll(async ({ browser }) => {
   const page = await browser.newPage()
-  await page.goto('/settings')
-
-  const create = page.getByRole('button', { name: /登録して/ })
-  if (await create.isVisible().catch(() => false)) {
-    await page.getByLabel('引越し名').fill('Home Lv.2')
-    await page.getByLabel('引越し日').fill('2026-11-15')
-    await create.click()
-    await expect(
-      page.getByRole('heading', { name: '引越しの設定' }),
-    ).toBeVisible({ timeout: 15000 })
-  }
+  await ensureMoveRegistered(page)
   await page.close()
 })
 
@@ -47,7 +36,7 @@ test('編集して保存すると一覧にも反映される', async ({ page }) 
 
   await page.goto('/tasks')
   await expect(
-    rows(page).filter({ hasText: '荷造りを始める' }),
+    questRows(page).filter({ hasText: '荷造りを始める' }),
   ).toContainText('期限 10/20')
 })
 
@@ -67,7 +56,7 @@ test('タイトルを空にするとサーバー側で弾かれる', async ({ pa
 
 test('削除は確認してから実行され、一覧から消える', async ({ page }) => {
   await page.goto('/tasks')
-  const before = await rows(page).count()
+  const before = await questRows(page).count()
 
   await openTask(page, '不用品を処分する')
   await page.getByRole('button', { name: 'この Quest を削除する' }).click()
@@ -77,8 +66,8 @@ test('削除は確認してから実行され、一覧から消える', async ({
   await dialog.getByRole('button', { name: '削除する' }).click()
 
   await expect(page).toHaveURL(/\/tasks$/)
-  await expect(rows(page)).toHaveCount(before - 1)
-  await expect(rows(page).filter({ hasText: '不用品を処分する' })).toHaveCount(0)
+  await expect(questRows(page)).toHaveCount(before - 1)
+  await expect(questRows(page).filter({ hasText: '不用品を処分する' })).toHaveCount(0)
 })
 
 test('存在しない Quest は見つからない旨を出す', async ({ page }) => {

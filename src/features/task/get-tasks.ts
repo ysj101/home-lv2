@@ -83,14 +83,9 @@ function assigneeCondition(
   }
 }
 
-export async function getTasks(
-  context: HouseholdContext,
-  filter: GetTasksFilter,
-): Promise<TaskListItem[]> {
-  const today = requireDate(filter.today, '基準日')
-  if (filter.category) requireTaskCategory(filter.category)
-
-  const rows = await context.db
+/** 一覧・詳細で共通の SELECT。担当者名と完了者名を JOIN で含める。 */
+function selectTasks(context: HouseholdContext) {
+  return context.db
     .select({
       task: tasks,
       assigneeName: assignee.name,
@@ -100,6 +95,48 @@ export async function getTasks(
     .innerJoin(moves, eq(moves.id, tasks.moveId))
     .leftJoin(assignee, eq(assignee.id, tasks.assigneeId))
     .leftJoin(completer, eq(completer.id, tasks.completedBy))
+}
+
+function toListItem(row: {
+  task: Task
+  assigneeName: string | null
+  completedByName: string | null
+}): TaskListItem {
+  return {
+    ...row.task,
+    assigneeName: row.assigneeName,
+    completedByName: row.completedByName,
+  }
+}
+
+/**
+ * Household スコープで1件だけ引く。
+ * 一覧を全件取ってから絞ると、詳細を開くたびに Task 件数ぶん読むことになる。
+ */
+export async function getTask(
+  context: HouseholdContext,
+  taskId: string,
+): Promise<TaskListItem | null> {
+  const [row] = await selectTasks(context)
+    .where(
+      and(
+        eq(tasks.id, taskId),
+        eq(moves.householdId, context.household.id),
+      ),
+    )
+    .limit(1)
+
+  return row ? toListItem(row) : null
+}
+
+export async function getTasks(
+  context: HouseholdContext,
+  filter: GetTasksFilter,
+): Promise<TaskListItem[]> {
+  const today = requireDate(filter.today, '基準日')
+  if (filter.category) requireTaskCategory(filter.category)
+
+  const rows = await selectTasks(context)
     .where(
       and(
         eq(moves.householdId, context.household.id),
@@ -115,9 +152,5 @@ export async function getTasks(
       asc(tasks.createdAt),
     )
 
-  return rows.map((row) => ({
-    ...row.task,
-    assigneeName: row.assigneeName,
-    completedByName: row.completedByName,
-  }))
+  return rows.map(toListItem)
 }
