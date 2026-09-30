@@ -1,7 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 
+import { HydratedSelect } from '@/components/hydrated'
 import {
-  Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/select'
 import type { TaskSearch } from '@/features/task/task-search'
 import { TASK_CATEGORY_OPTIONS, type TaskCategory } from '@/lib/task-category'
-import { useHydrated } from '@/lib/use-hydrated'
 import { cn } from '@/lib/utils'
 
 const STATUS_OPTIONS = [
@@ -105,14 +104,11 @@ const ALL_CATEGORIES = '__all__'
 
 function CategorySelect({ search }: { search: TaskSearch }) {
   const navigate = useNavigate({ from: '/tasks' })
-  // ハイドレーション前の Select は開かないので、押せないようにしておく。
-  const hydrated = useHydrated()
 
   return (
     <div className="flex items-center gap-2">
       <span className="w-8 shrink-0 text-xs text-muted-foreground">分類</span>
-      <Select
-        disabled={!hydrated}
+      <HydratedSelect
         value={search.category ?? ALL_CATEGORIES}
         onValueChange={(value) =>
           // Select はリンクにできないので、選択時にルーター側で遷移する。
@@ -136,7 +132,7 @@ function CategorySelect({ search }: { search: TaskSearch }) {
             </SelectItem>
           ))}
         </SelectContent>
-      </Select>
+      </HydratedSelect>
     </div>
   )
 }

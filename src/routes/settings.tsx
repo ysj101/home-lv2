@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 import { Field, FormError } from '@/components/field'
 import { PageTitle } from '@/components/page-title'
-import { HydratedButton } from '@/components/hydrated-button'
+import { HydratedButton } from '@/components/hydrated'
 import {
   Card,
   CardContent,

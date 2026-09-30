@@ -1,10 +1,9 @@
 import { useState } from 'react'
 
 import { Field, FormError } from '@/components/field'
-import { HydratedButton } from '@/components/hydrated-button'
+import { HydratedButton, HydratedSelect } from '@/components/hydrated'
 import { Input } from '@/components/ui/input'
 import {
-  Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
@@ -13,7 +12,6 @@ import {
 import type { HouseholdMemberSummary } from '@/features/auth/get-household-members'
 import type { CreateTaskInput } from '@/features/task/create-task'
 import { TASK_CATEGORY_OPTIONS } from '@/lib/task-category'
-import { useHydrated } from '@/lib/use-hydrated'
 
 const UNASSIGNED = '__unassigned__'
 
@@ -29,6 +27,8 @@ export function TaskForm({
   submitLabel: string
   onSubmit: (input: CreateTaskInput) => Promise<void>
 }) {
+  // shadcn（Radix）の Select は native select と違って FormData に載らないので、
+  // この2つだけ state で持ち、残りは defaultValue + FormData で扱う。
   const [error, setError] = useState<unknown>(null)
   const [saving, setSaving] = useState(false)
   const [category, setCategory] = useState(
@@ -37,8 +37,6 @@ export function TaskForm({
   const [assigneeId, setAssigneeId] = useState(
     defaultValues?.assigneeId ?? UNASSIGNED,
   )
-  const hydrated = useHydrated()
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
@@ -81,12 +79,11 @@ export function TaskForm({
       </Field>
 
       <Field id="category" label="カテゴリ" required>
-        <Select
+        <HydratedSelect
           value={category}
           onValueChange={(value) =>
             setCategory(value as CreateTaskInput['category'])
           }
-          disabled={!hydrated}
         >
           <SelectTrigger id="category" aria-label="カテゴリ" className="w-full">
             <SelectValue />
@@ -98,7 +95,7 @@ export function TaskForm({
               </SelectItem>
             ))}
           </SelectContent>
-        </Select>
+        </HydratedSelect>
       </Field>
 
       <Field id="dueDate" label="期限">
@@ -111,11 +108,7 @@ export function TaskForm({
       </Field>
 
       <Field id="assignee" label="担当">
-        <Select
-          value={assigneeId}
-          onValueChange={setAssigneeId}
-          disabled={!hydrated}
-        >
+        <HydratedSelect value={assigneeId} onValueChange={setAssigneeId}>
           <SelectTrigger id="assignee" aria-label="担当" className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -127,7 +120,7 @@ export function TaskForm({
               </SelectItem>
             ))}
           </SelectContent>
-        </Select>
+        </HydratedSelect>
       </Field>
 
       <FormError error={error} />

@@ -6,7 +6,7 @@ import { TaskFilters } from '@/components/task-filters'
 import { PageTitle } from '@/components/page-title'
 import { TaskForm } from '@/components/task-form'
 import { TaskRow } from '@/components/task-row'
-import { HydratedButton } from '@/components/hydrated-button'
+import { HydratedButton } from '@/components/hydrated'
 import {
   Dialog,
   DialogContent,
@@ -21,11 +21,9 @@ import {
   CardHeader,
 } from '@/components/ui/card'
 import { fetchMove } from '@/features/move/server'
-import {
-  fetchHouseholdMembers,
-  fetchTasks,
-  submitCreateTask,
-} from '@/features/task/server'
+import type { HouseholdMemberSummary } from '@/features/auth/get-household-members'
+import { fetchHouseholdMembers } from '@/features/auth/server'
+import { fetchTasks, submitCreateTask } from '@/features/task/server'
 import {
   validateTaskSearch,
   type TaskSearch,
@@ -37,12 +35,9 @@ export const Route = createFileRoute('/tasks')({
   // 絞り込みが変わったら読み直す。
   loaderDeps: ({ search }: { search: TaskSearch }) => search,
   loader: async ({ deps }) => {
-    const move = await fetchMove()
-    if (!move) {
-      return { move: null, tasks: [], members: [], today: today() }
-    }
-
-    const [tasks, members] = await Promise.all([
+    // tasks / members は move の有無に依存しないので3本まとめて投げる。
+    const [move, tasks, members] = await Promise.all([
+      fetchMove(),
       fetchTasks({ data: deps }),
       fetchHouseholdMembers(),
     ])
@@ -95,11 +90,7 @@ function TaskList() {
   )
 }
 
-function AddTaskDialog({
-  members,
-}: {
-  members: { id: string; name: string; email: string }[]
-}) {
+function AddTaskDialog({ members }: { members: HouseholdMemberSummary[] }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
 
