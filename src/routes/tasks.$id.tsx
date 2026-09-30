@@ -19,9 +19,12 @@ import {
 import { fetchHouseholdMembers } from '@/features/auth/server'
 import {
   fetchTask,
+  submitCompleteTask,
   submitDeleteTask,
+  submitReopenTask,
   submitUpdateTask,
 } from '@/features/task/server'
+import { toDateString, toMonthDay } from '@/lib/date'
 import { categoryLabel } from '@/lib/task-category'
 
 export const Route = createFileRoute('/tasks/$id')({
@@ -35,6 +38,50 @@ export const Route = createFileRoute('/tasks/$id')({
   },
   component: TaskDetail,
 })
+
+/** 完了・再オープンの切り替え。完了済みなら誰がいつ終えたかを添える。 */
+function CompleteToggle({
+  task,
+}: {
+  task: NonNullable<Awaited<ReturnType<typeof fetchTask>>>
+}) {
+  const router = useRouter()
+  const [busy, setBusy] = useState(false)
+  const completed = task.status === 'completed'
+
+  async function toggle() {
+    setBusy(true)
+    try {
+      const data = { id: task.id }
+      if (completed) await submitReopenTask({ data })
+      else await submitCompleteTask({ data })
+
+      await router.invalidate()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <HydratedButton
+        variant={completed ? 'outline' : 'default'}
+        className="w-full"
+        disabled={busy}
+        onClick={toggle}
+      >
+        {completed ? '再オープンする' : 'Clear!'}
+      </HydratedButton>
+
+      {completed && task.completedAt ? (
+        <p className="text-center text-xs text-muted-foreground">
+          {toMonthDay(toDateString(task.completedAt))} に
+          {task.completedByName ? ` ${task.completedByName} が` : ''}完了
+        </p>
+      ) : null}
+    </div>
+  )
+}
 
 function TaskDetail() {
   const { task, members } = Route.useLoaderData()
@@ -65,10 +112,13 @@ function TaskDetail() {
               </span>
             ) : null}
             <span>
-              {task.status === 'completed' ? '完了' : '未完了'}
+              {task.status === 'completed' ? 'Cleared' : '未完了'}
             </span>
           </CardDescription>
         </CardHeader>
+        <CardContent className="pb-0">
+          <CompleteToggle task={task} />
+        </CardContent>
         <CardContent>
           <TaskForm
             key={task.id}
