@@ -17,6 +17,7 @@
     "db:migrate:remote": "wrangler d1 migrations apply home-lv2-db --remote",
     "db:seed:local": "tsx src/db/seed/run.ts --local",
     "db:seed:remote": "tsx src/db/seed/run.ts --remote",
+    "db:reset:local": "rm -rf .wrangler && pnpm db:migrate:local && pnpm db:seed:local",
     "deploy": "pnpm run build && wrangler deploy"
   },
   "dependencies": {
