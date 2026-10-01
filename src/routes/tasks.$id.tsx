@@ -19,11 +19,10 @@ import {
 import { fetchHouseholdMembers } from '@/features/auth/server'
 import {
   fetchTask,
-  submitCompleteTask,
   submitDeleteTask,
-  submitReopenTask,
   submitUpdateTask,
 } from '@/features/task/server'
+import { useCompleteToggle } from '@/features/task/use-complete-toggle'
 import { toDateString, toMonthDay } from '@/lib/date'
 import { categoryLabel } from '@/lib/task-category'
 
@@ -45,22 +44,7 @@ function CompleteToggle({
 }: {
   task: NonNullable<Awaited<ReturnType<typeof fetchTask>>>
 }) {
-  const router = useRouter()
-  const [busy, setBusy] = useState(false)
-  const completed = task.status === 'completed'
-
-  async function toggle() {
-    setBusy(true)
-    try {
-      const data = { id: task.id }
-      if (completed) await submitReopenTask({ data })
-      else await submitCompleteTask({ data })
-
-      await router.invalidate()
-    } finally {
-      setBusy(false)
-    }
-  }
+  const { completed, busy, toggle } = useCompleteToggle(task)
 
   return (
     <div className="space-y-2">

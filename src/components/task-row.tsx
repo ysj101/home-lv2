@@ -1,12 +1,8 @@
-import { Link, useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 
 import { HydratedCheckbox } from '@/components/hydrated'
 import type { TaskListItem } from '@/features/task/get-tasks'
-import {
-  submitCompleteTask,
-  submitReopenTask,
-} from '@/features/task/server'
+import { useCompleteToggle } from '@/features/task/use-complete-toggle'
 import { isOverdue } from '@/lib/dashboard'
 import { toMonthDay } from '@/lib/date'
 import { categoryLabel } from '@/lib/task-category'
@@ -19,24 +15,9 @@ export function TaskRow({
   task: TaskListItem
   today: string
 }) {
-  const router = useRouter()
-  const [busy, setBusy] = useState(false)
+  const { completed, busy, toggle } = useCompleteToggle(task)
   const overdue = isOverdue(task, today)
   const due = task.dueDate ? toMonthDay(task.dueDate) : null
-  const completed = task.status === 'completed'
-
-  async function toggle() {
-    setBusy(true)
-    try {
-      const data = { id: task.id }
-      if (completed) await submitReopenTask({ data })
-      else await submitCompleteTask({ data })
-
-      await router.invalidate()
-    } finally {
-      setBusy(false)
-    }
-  }
 
   return (
     <li>
