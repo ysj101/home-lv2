@@ -12,7 +12,25 @@ import type { HouseholdMemberSummary } from '@/features/auth/get-household-membe
 import { submitAssignTask } from '@/features/task/server'
 
 /** 未割当を表す Select の値。Radix は空文字を選択値にできない。 */
-const UNASSIGNED = '__unassigned__'
+export const UNASSIGNED = '__unassigned__'
+
+/** 担当の選択肢。未割当 + Household のメンバー。 */
+export function AssigneeOptions({
+  members,
+}: {
+  members: HouseholdMemberSummary[]
+}) {
+  return (
+    <SelectContent>
+      <SelectItem value={UNASSIGNED}>未割当</SelectItem>
+      {members.map((member) => (
+        <SelectItem key={member.id} value={member.id}>
+          {member.name}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  )
+}
 
 /**
  * 担当者の設定・解除（spec §11 UC-04）。
@@ -53,14 +71,7 @@ export function AssigneeSelect({
       <SelectTrigger aria-label="担当" className="w-full">
         <SelectValue />
       </SelectTrigger>
-      <SelectContent>
-        <SelectItem value={UNASSIGNED}>未割当</SelectItem>
-        {members.map((member) => (
-          <SelectItem key={member.id} value={member.id}>
-            {member.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
+      <AssigneeOptions members={members} />
     </HydratedSelect>
   )
 }

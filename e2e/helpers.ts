@@ -22,3 +22,11 @@ export async function ensureMoveRegistered(page: Page): Promise<void> {
     timeout: 15000,
   })
 }
+
+/** 一覧からタイトル一致の Quest を開く。 */
+export async function openTask(page: Page, title: string): Promise<void> {
+  await page.goto('/tasks')
+  await page.getByRole('link', { name: new RegExp(title) }).first().click()
+
+  await expect(page.getByRole('heading', { name: title })).toBeVisible()
+}

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { ensureMoveRegistered, questRows } from './helpers'
+import { ensureMoveRegistered, openTask, questRows } from './helpers'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -9,13 +9,6 @@ test.beforeAll(async ({ browser }) => {
   await ensureMoveRegistered(page)
   await page.close()
 })
-
-/** 一覧から指定タイトルの Quest を開く。 */
-async function openTask(page: import('@playwright/test').Page, title: string) {
-  await page.goto('/tasks')
-  await page.getByRole('link', { name: new RegExp(title) }).first().click()
-  await expect(page.getByRole('heading', { name: title })).toBeVisible()
-}
 
 test('詳細にタイトル・カテゴリ・テンプレートバッジが出る', async ({ page }) => {
   await openTask(page, '電気の停止・開始手続き')
