@@ -4,6 +4,36 @@
  * Date の加減算を書かないこと。
  */
 
+/**
+ * アプリの基準タイムゾーン。
+ *
+ * Workers は UTC で動くので、そのまま日付にすると日本時間の深夜に
+ * 「今日」が1日ずれる。家族3人が日本で使う前提なので JST に固定する。
+ */
+export const APP_TIME_ZONE = 'Asia/Tokyo'
+
+/**
+ * 基準タイムゾーンの日付フォーマッタ。
+ * Intl.DateTimeFormat の生成はロケール解決を伴って重いので、
+ * アイソレートごとに1つだけ作って使い回す（状態を持たないので安全）。
+ * sv-SE ロケールは YYYY-MM-DD 形式で出力する。
+ */
+const dateFormatter = new Intl.DateTimeFormat('sv-SE', {
+  timeZone: APP_TIME_ZONE,
+})
+
+/** 基準タイムゾーンでの「今日」を `YYYY-MM-DD` で返す。 */
+export function today(now: Date = new Date()): string {
+  return dateFormatter.format(now)
+}
+
+/** `YYYY-MM-DD` を一覧表示用の `M/D` にする。 */
+export function toMonthDay(isoDate: string): string {
+  const [, month, day] = isoDate.split('-')
+
+  return `${Number(month)}/${Number(day)}`
+}
+
 /** 1日のミリ秒数。 */
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 

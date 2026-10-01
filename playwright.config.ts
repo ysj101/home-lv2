@@ -7,7 +7,10 @@ export default defineConfig({
   testDir: './e2e',
   // 毎回ローカル D1 を作り直してから始める。
   globalSetup: './e2e/global-setup.ts',
-  fullyParallel: true,
+  // ローカル D1 を全テストで共有するので直列に流す。
+  // 並列にすると、複数の spec がそれぞれ引越しを登録してしまう。
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: 'list',
