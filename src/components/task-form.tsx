@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { Field, FormError } from '@/components/field'
+import { AssigneeOptions, UNASSIGNED } from '@/components/assignee-select'
 import { HydratedButton, HydratedSelect } from '@/components/hydrated'
 import { Input } from '@/components/ui/input'
 import {
@@ -12,8 +13,6 @@ import {
 import type { HouseholdMemberSummary } from '@/features/auth/get-household-members'
 import type { CreateTaskInput } from '@/features/task/create-task'
 import { TASK_CATEGORY_OPTIONS } from '@/lib/task-category'
-
-const UNASSIGNED = '__unassigned__'
 
 /** Quest の入力フォーム。追加（#33）と詳細の編集（#34）で共用する。 */
 export function TaskForm({
@@ -120,14 +119,7 @@ export function TaskForm({
             <SelectTrigger id="assignee" aria-label="担当" className="w-full">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={UNASSIGNED}>未割当</SelectItem>
-              {members.map((member) => (
-                <SelectItem key={member.id} value={member.id}>
-                  {member.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
+            <AssigneeOptions members={members} />
           </HydratedSelect>
         </Field>
       ) : null}

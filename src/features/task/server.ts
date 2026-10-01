@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 
 import { requireContext } from '@/features/auth/context'
+import { assignTask } from '@/features/task/assign-task'
 import {
   completeTask,
   reopenTask,
@@ -59,3 +60,9 @@ export const submitCompleteTask = createServerFn({ method: 'POST' })
 export const submitReopenTask = createServerFn({ method: 'POST' })
   .validator((data: { id: string }) => data)
   .handler(async ({ data }) => reopenTask(await requireContext(), data.id))
+
+export const submitAssignTask = createServerFn({ method: 'POST' })
+  .validator((data: { id: string; assigneeId: string | null }) => data)
+  .handler(async ({ data }) =>
+    assignTask(await requireContext(), data.id, data.assigneeId),
+  )
