@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 import { Field, FormError } from '@/components/field'
 import { PageTitle } from '@/components/page-title'
-import { Button } from '@/components/ui/button'
+import { HydratedButton } from '@/components/hydrated'
 import {
   Card,
   CardContent,
@@ -16,7 +16,6 @@ import {
   submitCreateMove,
   submitUpdateMove,
 } from '@/features/move/server'
-import { useHydrated } from '@/lib/use-hydrated'
 
 export const Route = createFileRoute('/settings')({
   loader: () => fetchMove(),
@@ -28,7 +27,6 @@ function MoveSettings() {
   const router = useRouter()
   const [error, setError] = useState<unknown>(null)
   const [saving, setSaving] = useState(false)
-  const hydrated = useHydrated()
 
   const isCreate = move === null
 
@@ -116,9 +114,9 @@ function MoveSettings() {
 
           <FormError error={error} />
 
-          <Button type="submit" className="w-full" disabled={!hydrated || saving}>
+          <HydratedButton type="submit" className="w-full" disabled={saving}>
             {saving ? '保存中…' : isCreate ? '登録して Quest を作る' : '保存する'}
-          </Button>
+          </HydratedButton>
         </form>
       </CardContent>
     </Card>

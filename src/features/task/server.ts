@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 
 import { requireContext } from '@/features/auth/context'
+import { createTask, type CreateTaskInput } from '@/features/task/create-task'
 import { getTasks, type GetTasksFilter } from '@/features/task/get-tasks'
 import { today } from '@/lib/date'
 
@@ -17,3 +18,7 @@ export const fetchTasks = createServerFn()
   .handler(async ({ data }) =>
     getTasks(await requireContext(), { ...data, today: today() }),
   )
+
+export const submitCreateTask = createServerFn({ method: 'POST' })
+  .validator((data: CreateTaskInput) => data)
+  .handler(async ({ data }) => createTask(await requireContext(), data))
