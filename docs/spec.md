@@ -676,7 +676,7 @@ src/
 ├── routes/
 │   ├── __root.tsx
 │   ├── index.tsx
-│   ├── tasks.tsx
+│   ├── tasks.index.tsx   # /tasks（TanStack Router の index route 規約）
 │   ├── tasks.$id.tsx
 │   └── settings.tsx
 │

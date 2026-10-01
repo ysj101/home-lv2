@@ -103,7 +103,7 @@ function Segmented<TValue extends string>({
 const ALL_CATEGORIES = '__all__'
 
 function CategorySelect({ search }: { search: TaskSearch }) {
-  const navigate = useNavigate({ from: '/tasks' })
+  const navigate = useNavigate({ from: '/tasks/' })
 
   return (
     <div className="flex items-center gap-2">

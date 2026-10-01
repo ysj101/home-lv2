@@ -1,29 +1,18 @@
 import { expect, test } from '@playwright/test'
 
-test.describe.configure({ mode: 'serial' })
+import { ensureMoveRegistered, questRows } from './helpers'
 
-const rows = (page: import('@playwright/test').Page) =>
-  page.getByRole('list', { name: 'Quest 一覧' }).getByRole('listitem')
+test.describe.configure({ mode: 'serial' })
 
 test.beforeAll(async ({ browser }) => {
   const page = await browser.newPage()
-  await page.goto('/settings')
-
-  const create = page.getByRole('button', { name: /登録して/ })
-  if (await create.isVisible().catch(() => false)) {
-    await page.getByLabel('引越し名').fill('Home Lv.2')
-    await page.getByLabel('引越し日').fill('2026-11-15')
-    await create.click()
-    await expect(
-      page.getByRole('heading', { name: '引越しの設定' }),
-    ).toBeVisible({ timeout: 15000 })
-  }
+  await ensureMoveRegistered(page)
   await page.close()
 })
 
 test('フォームから Quest を追加すると一覧に反映される', async ({ page }) => {
   await page.goto('/tasks')
-  const before = await rows(page).count()
+  const before = await questRows(page).count()
 
   await page.getByRole('button', { name: 'Quest を追加' }).click()
   const dialog = page.getByRole('dialog')
@@ -40,8 +29,8 @@ test('フォームから Quest を追加すると一覧に反映される', asyn
 
   await dialog.getByRole('button', { name: '追加する' }).click()
 
-  await expect(rows(page)).toHaveCount(before + 1)
-  const added = rows(page).filter({ hasText: 'ベランダの片付け' })
+  await expect(questRows(page)).toHaveCount(before + 1)
+  const added = questRows(page).filter({ hasText: 'ベランダの片付け' })
   await expect(added).toContainText('期限 11/10')
   await expect(added).toContainText('Adult B')
   await expect(added).toContainText('荷造り')
@@ -74,6 +63,6 @@ test('期限なしでも追加できる', async ({ page }) => {
   await dialog.getByRole('button', { name: '追加する' }).click()
 
   await expect(
-    rows(page).filter({ hasText: 'いつかやる' }),
+    questRows(page).filter({ hasText: 'いつかやる' }),
   ).toContainText('期限なし')
 })

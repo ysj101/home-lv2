@@ -30,7 +30,7 @@ import {
 } from '@/features/task/task-search'
 import { today } from '@/lib/date'
 
-export const Route = createFileRoute('/tasks')({
+export const Route = createFileRoute('/tasks/')({
   validateSearch: validateTaskSearch,
   // 絞り込みが変わったら読み直す。
   loaderDeps: ({ search }: { search: TaskSearch }) => search,
