@@ -41,7 +41,7 @@ export function TaskSection({
           <Link
             to="/tasks"
             search={seeAll}
-            className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+            className="tap-target inline-flex items-center px-1 text-xs text-muted-foreground underline-offset-4 hover:underline"
           >
             すべて見る
           </Link>

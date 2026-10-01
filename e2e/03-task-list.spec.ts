@@ -52,11 +52,4 @@ test('期限超過の Quest が強調される', async ({ page }) => {
   expect(await overdue.count()).toBeGreaterThan(0)
 })
 
-test('スマートフォン幅で横スクロールが出ない', async ({ page }) => {
-  await page.goto('/tasks')
-
-  const overflows = await page.evaluate(
-    () => document.documentElement.scrollWidth > window.innerWidth + 1,
-  )
-  expect(overflows).toBe(false)
-})
+// モバイル幅の検証は 12-responsive.spec.ts がまとめて担当する。

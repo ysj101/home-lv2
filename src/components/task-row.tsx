@@ -39,7 +39,7 @@ export function TaskRow({
         <Link
           to="/tasks/$id"
           params={{ id: task.id }}
-          className="min-w-0 flex-1"
+          className="tap-target min-w-0 flex-1"
         >
           <p
             className={cn(

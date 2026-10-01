@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select } from '@/components/ui/select'
 import { useHydrated } from '@/lib/use-hydrated'
+import { cn } from '@/lib/utils'
 
 /**
  * ハイドレーションが終わるまで押せないボタン。
@@ -32,12 +33,24 @@ export function HydratedSelect({
   return <Select disabled={!hydrated || disabled} {...props} />
 }
 
-/** ハイドレーションが終わるまで操作できないチェックボックス。 */
+/**
+ * ハイドレーションが終わるまで操作できないチェックボックス。
+ *
+ * 見た目は小さいままに、擬似要素で当たり判定を 44px 以上に広げる
+ * （docs/spec.md §25 Mobile First）。
+ */
 export function HydratedCheckbox({
   disabled,
+  className,
   ...props
 }: React.ComponentProps<typeof Checkbox>) {
   const hydrated = useHydrated()
 
-  return <Checkbox disabled={!hydrated || disabled} {...props} />
+  return (
+    <Checkbox
+      disabled={!hydrated || disabled}
+      className={cn('after:-inset-y-3', className)}
+      {...props}
+    />
+  )
 }
