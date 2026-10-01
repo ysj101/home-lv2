@@ -26,7 +26,11 @@ export function progress(tasks: DashboardTask[]): number {
 
 /** 完了率の百分率表示（0〜100 の整数）。 */
 export function progressPercent(tasks: DashboardTask[]): number {
-  return Math.round(progress(tasks) * 100)
+  return toPercent(progress(tasks))
+}
+
+function toPercent(value: number): number {
+  return Math.round(value * 100)
 }
 
 function countCompleted(tasks: DashboardTask[]): number {
@@ -90,6 +94,28 @@ export function summarize(
     completed,
     remaining: tasks.length - completed,
     overdue,
-    progressPercent: Math.round(ratio(completed, tasks.length) * 100),
+    progressPercent: toPercent(ratio(completed, tasks.length)),
+  }
+}
+
+/**
+ * Dashboard 下部の4セクション（spec §12.1）。
+ *
+ * 「今週は今日ぶんを除く」「最近完了は完了日の降順」といった組み立ての
+ * ルールも仕様なので、画面ではなくここに置いてテストできるようにする。
+ */
+export function buildDashboardSections<
+  T extends DashboardTask & { completedAt: Date | null },
+>(tasks: T[], today: string) {
+  return {
+    overdue: tasks.filter((task) => isOverdue(task, today)),
+    dueToday: tasks.filter((task) => isDueToday(task, today)),
+    // 今日ぶんは別枠に出すので、今週からは除く。
+    thisWeek: tasks.filter(
+      (task) => isUpcoming(task, today) && !isDueToday(task, today),
+    ),
+    recentlyCleared: tasks
+      .filter((task) => task.status === 'completed' && task.completedAt)
+      .sort((a, b) => b.completedAt!.getTime() - a.completedAt!.getTime()),
   }
 }

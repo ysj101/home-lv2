@@ -8,9 +8,10 @@ import {
   CardDescription,
   CardHeader,
 } from '@/components/ui/card'
+import { TaskSection } from '@/components/task-section'
 import { fetchMove } from '@/features/move/server'
 import { fetchTasks } from '@/features/task/server'
-import { daysUntil, summarize } from '@/lib/dashboard'
+import { buildDashboardSections, daysUntil, summarize } from '@/lib/dashboard'
 import { today } from '@/lib/date'
 
 export const Route = createFileRoute('/')({
@@ -34,19 +35,55 @@ function Dashboard() {
   const remainingDays = daysUntil(move.moveDate, currentDate)
   const summary = summarize(tasks, currentDate)
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardDescription>Main Quest</CardDescription>
-        <PageTitle>{move.name}</PageTitle>
-      </CardHeader>
+  const sections = buildDashboardSections(tasks, currentDate)
 
-      <CardContent className="space-y-6">
-        <Countdown days={remainingDays} moveDate={move.moveDate} />
-        <LevelProgress percent={summary.progressPercent} />
-        <Counts summary={summary} />
-      </CardContent>
-    </Card>
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardDescription>Main Quest</CardDescription>
+          <PageTitle>{move.name}</PageTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          <Countdown days={remainingDays} moveDate={move.moveDate} />
+          <LevelProgress percent={summary.progressPercent} />
+          <Counts summary={summary} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-6">
+          <TaskSection
+            title="期限超過"
+            tasks={sections.overdue}
+            today={currentDate}
+            seeAll={{ status: 'overdue' }}
+            emptyText="期限を過ぎた Quest はありません。"
+          />
+          <TaskSection
+            title="今日やること"
+            tasks={sections.dueToday}
+            today={currentDate}
+            emptyText="今日が期限の Quest はありません。"
+          />
+          <TaskSection
+            title="今週やること"
+            tasks={sections.thisWeek}
+            today={currentDate}
+            seeAll={{ status: 'todo' }}
+            emptyText="7日以内が期限の Quest はありません。"
+          />
+          <TaskSection
+            title="最近完了した Quest"
+            tasks={sections.recentlyCleared}
+            today={currentDate}
+            seeAll={{ status: 'completed' }}
+            emptyText="まだ完了した Quest はありません。"
+          />
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
