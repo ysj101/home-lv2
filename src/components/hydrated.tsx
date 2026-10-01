@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Select } from '@/components/ui/select'
 import { useHydrated } from '@/lib/use-hydrated'
 
@@ -29,4 +30,14 @@ export function HydratedSelect({
   const hydrated = useHydrated()
 
   return <Select disabled={!hydrated || disabled} {...props} />
+}
+
+/** ハイドレーションが終わるまで操作できないチェックボックス。 */
+export function HydratedCheckbox({
+  disabled,
+  ...props
+}: React.ComponentProps<typeof Checkbox>) {
+  const hydrated = useHydrated()
+
+  return <Checkbox disabled={!hydrated || disabled} {...props} />
 }

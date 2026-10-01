@@ -1,6 +1,10 @@
 import { createServerFn } from '@tanstack/react-start'
 
 import { requireContext } from '@/features/auth/context'
+import {
+  completeTask,
+  reopenTask,
+} from '@/features/task/complete-task'
 import { createTask, type CreateTaskInput } from '@/features/task/create-task'
 import { deleteTask } from '@/features/task/delete-task'
 import {
@@ -47,3 +51,11 @@ export const submitDeleteTask = createServerFn({ method: 'POST' })
 
     return { ok: true as const }
   })
+
+export const submitCompleteTask = createServerFn({ method: 'POST' })
+  .validator((data: { id: string }) => data)
+  .handler(async ({ data }) => completeTask(await requireContext(), data.id))
+
+export const submitReopenTask = createServerFn({ method: 'POST' })
+  .validator((data: { id: string }) => data)
+  .handler(async ({ data }) => reopenTask(await requireContext(), data.id))

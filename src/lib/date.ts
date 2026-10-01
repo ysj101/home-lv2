@@ -27,6 +27,11 @@ export function today(now: Date = new Date()): string {
   return dateFormatter.format(now)
 }
 
+/** Date を基準タイムゾーンの `YYYY-MM-DD` にする。 */
+export function toDateString(date: Date): string {
+  return dateFormatter.format(date)
+}
+
 /** `YYYY-MM-DD` を一覧表示用の `M/D` にする。 */
 export function toMonthDay(isoDate: string): string {
   const [, month, day] = isoDate.split('-')
