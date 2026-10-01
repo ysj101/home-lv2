@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 
-import { TaskRow } from '@/components/task-row'
+import { TaskList } from '@/components/task-list'
 import type { TaskListItem } from '@/features/task/get-tasks'
 import type { TaskSearch } from '@/features/task/task-search'
 
@@ -48,15 +48,12 @@ export function TaskSection({
         ) : null}
       </div>
 
-      {shown.length === 0 ? (
-        <p className="py-3 text-xs text-muted-foreground">{emptyText}</p>
-      ) : (
-        <ul aria-label={`${title} の Quest`} className="-mt-1">
-          {shown.map((task) => (
-            <TaskRow key={task.id} task={task} today={today} />
-          ))}
-        </ul>
-      )}
+      <TaskList
+        tasks={shown}
+        today={today}
+        label={`${title} の Quest`}
+        emptyText={emptyText}
+      />
     </section>
   )
 }

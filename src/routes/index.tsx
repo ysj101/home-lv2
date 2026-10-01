@@ -11,13 +11,7 @@ import {
 import { TaskSection } from '@/components/task-section'
 import { fetchMove } from '@/features/move/server'
 import { fetchTasks } from '@/features/task/server'
-import {
-  daysUntil,
-  isDueToday,
-  isOverdue,
-  isUpcoming,
-  summarize,
-} from '@/lib/dashboard'
+import { buildDashboardSections, daysUntil, summarize } from '@/lib/dashboard'
 import { today } from '@/lib/date'
 
 export const Route = createFileRoute('/')({
@@ -41,15 +35,7 @@ function Dashboard() {
   const remainingDays = daysUntil(move.moveDate, currentDate)
   const summary = summarize(tasks, currentDate)
 
-  const dueToday = tasks.filter((task) => isDueToday(task, currentDate))
-  const overdue = tasks.filter((task) => isOverdue(task, currentDate))
-  // 今週は当日を含む7日以内。今日ぶんは別枠に出すので除く。
-  const thisWeek = tasks.filter(
-    (task) => isUpcoming(task, currentDate) && !isDueToday(task, currentDate),
-  )
-  const recentlyCleared = tasks
-    .filter((task) => task.status === 'completed' && task.completedAt)
-    .sort((a, b) => b.completedAt!.getTime() - a.completedAt!.getTime())
+  const sections = buildDashboardSections(tasks, currentDate)
 
   return (
     <div className="space-y-4">
@@ -70,27 +56,27 @@ function Dashboard() {
         <CardContent className="space-y-6">
           <TaskSection
             title="期限超過"
-            tasks={overdue}
+            tasks={sections.overdue}
             today={currentDate}
             seeAll={{ status: 'overdue' }}
             emptyText="期限を過ぎた Quest はありません。"
           />
           <TaskSection
             title="今日やること"
-            tasks={dueToday}
+            tasks={sections.dueToday}
             today={currentDate}
             emptyText="今日が期限の Quest はありません。"
           />
           <TaskSection
             title="今週やること"
-            tasks={thisWeek}
+            tasks={sections.thisWeek}
             today={currentDate}
             seeAll={{ status: 'todo' }}
             emptyText="7日以内が期限の Quest はありません。"
           />
           <TaskSection
             title="最近完了した Quest"
-            tasks={recentlyCleared}
+            tasks={sections.recentlyCleared}
             today={currentDate}
             seeAll={{ status: 'completed' }}
             emptyText="まだ完了した Quest はありません。"

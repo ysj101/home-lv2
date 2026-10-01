@@ -5,7 +5,7 @@ import { NoMove } from '@/components/empty-state'
 import { TaskFilters } from '@/components/task-filters'
 import { PageTitle } from '@/components/page-title'
 import { TaskForm } from '@/components/task-form'
-import { TaskRow } from '@/components/task-row'
+import { TaskList } from '@/components/task-list'
 import { HydratedButton } from '@/components/hydrated'
 import {
   Dialog,
@@ -44,10 +44,10 @@ export const Route = createFileRoute('/tasks/')({
 
     return { move, tasks, members, today: today() }
   },
-  component: TaskList,
+  component: TaskListPage,
 })
 
-function TaskList() {
+function TaskListPage() {
   const { move, tasks, members, today: currentDate } = Route.useLoaderData()
   const search = Route.useSearch()
 
@@ -74,17 +74,12 @@ function TaskList() {
 
         <TaskFilters search={search} />
 
-        {tasks.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            条件に合う Quest がありません。
-          </p>
-        ) : (
-          <ul aria-label="Quest 一覧" className="-mt-3">
-            {tasks.map((task) => (
-              <TaskRow key={task.id} task={task} today={currentDate} />
-            ))}
-          </ul>
-        )}
+        <TaskList
+          tasks={tasks}
+          today={currentDate}
+          label="Quest 一覧"
+          emptyText="条件に合う Quest がありません。"
+        />
       </CardContent>
     </Card>
   )

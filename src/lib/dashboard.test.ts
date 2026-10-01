@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  buildDashboardSections,
   type DashboardTask,
   daysUntil,
   isDueToday,
@@ -136,5 +137,60 @@ describe('summarize', () => {
       overdue: 0,
       progressPercent: 0,
     })
+  })
+})
+
+describe('buildDashboardSections', () => {
+  const at = (date: string) => new Date(`${date}T00:00:00Z`)
+  const tasks = [
+    { id: 'overdue', ...task('2026-10-30'), completedAt: null },
+    { id: 'today', ...task(TODAY), completedAt: null },
+    { id: 'week', ...task('2026-11-05'), completedAt: null },
+    { id: 'far', ...task('2026-11-30'), completedAt: null },
+    { id: 'none', ...task(null), completedAt: null },
+    {
+      id: 'old-clear',
+      ...task('2026-10-20', 'completed'),
+      completedAt: at('2026-10-21'),
+    },
+    {
+      id: 'new-clear',
+      ...task('2026-10-25', 'completed'),
+      completedAt: at('2026-10-28'),
+    },
+  ]
+
+  const ids = (list: { id: string }[]) => list.map((item) => item.id)
+
+  it('期限超過を集める', () => {
+    expect(ids(buildDashboardSections(tasks, TODAY).overdue)).toEqual([
+      'overdue',
+    ])
+  })
+
+  it('今日が期限のものを集める', () => {
+    expect(ids(buildDashboardSections(tasks, TODAY).dueToday)).toEqual(['today'])
+  })
+
+  it('今週からは今日ぶんを除く', () => {
+    const { thisWeek } = buildDashboardSections(tasks, TODAY)
+
+    expect(ids(thisWeek)).toEqual(['week'])
+    expect(ids(thisWeek)).not.toContain('today')
+  })
+
+  it('最近完了は完了日の降順', () => {
+    expect(ids(buildDashboardSections(tasks, TODAY).recentlyCleared)).toEqual([
+      'new-clear',
+      'old-clear',
+    ])
+  })
+
+  it('完了済みは期限のセクションに出さない', () => {
+    const { overdue, dueToday, thisWeek } = buildDashboardSections(tasks, TODAY)
+
+    for (const section of [overdue, dueToday, thisWeek]) {
+      expect(ids(section)).not.toContain('old-clear')
+    }
   })
 })
