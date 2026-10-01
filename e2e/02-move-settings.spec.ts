@@ -47,7 +47,11 @@ test('引越し名を編集して保存できる', async ({ page }) => {
   await page.goto('/settings')
 
   await page.getByLabel('引越し名').fill('Home Lv.2 改')
-  await page.getByRole('button', { name: '保存する' }).click()
+  // 保存の往復が終わる前にリロードすると古い値を読んでしまう。
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === 'POST'),
+    page.getByRole('button', { name: '保存する' }).click(),
+  ])
 
   await page.reload()
   await expect(page.getByLabel('引越し名')).toHaveValue('Home Lv.2 改')
