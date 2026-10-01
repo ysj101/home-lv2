@@ -39,8 +39,7 @@ export function TaskRow({
         <Link
           to="/tasks/$id"
           params={{ id: task.id }}
-          // 行全体をタップ領域にする（spec §25 Mobile First）。
-          className="min-h-11 min-w-0 flex-1"
+          className="tap-target min-w-0 flex-1"
         >
           <p
             className={cn(

@@ -84,7 +84,7 @@ function Segmented<TValue extends string>({
                 search={toSearch(option.value)}
                 aria-current={active ? 'true' : undefined}
                 className={cn(
-                  'inline-flex min-h-11 items-center rounded-full border px-4 text-xs transition-colors',
+                  'tap-target inline-flex items-center rounded-full border px-4 text-xs transition-colors',
                   active
                     ? 'border-transparent bg-primary text-primary-foreground'
                     : 'text-muted-foreground',

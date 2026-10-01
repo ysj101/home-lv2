@@ -121,11 +121,15 @@
   /*
    * タッチ操作では 44px 以上のタップ領域を確保する（docs/spec.md §25 Mobile First）。
    * 画面ごとに書くと足し忘れるので、操作要素の既定としてここで一度だけ決める。
+   *
+   * リンクは本文中にも現れるため一律には広げられない。タップ対象にする
+   * リンクには .tap-target を付ける。
    */
   @media (pointer: coarse) {
     button:not([role='checkbox']),
     [role='combobox'],
-    input:not([type='hidden']) {
+    input:not([type='hidden']),
+    .tap-target {
       min-height: 2.75rem;
     }
   }

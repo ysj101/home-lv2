@@ -41,8 +41,7 @@ export function TaskSection({
           <Link
             to="/tasks"
             search={seeAll}
-            // タップ領域を確保する（spec §25 Mobile First）。
-            className="inline-flex min-h-11 items-center px-1 text-xs text-muted-foreground underline-offset-4 hover:underline"
+            className="tap-target inline-flex items-center px-1 text-xs text-muted-foreground underline-offset-4 hover:underline"
           >
             すべて見る
           </Link>
