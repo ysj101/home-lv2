@@ -85,15 +85,39 @@ export async function listTaskTemplates(db: Db): Promise<TaskTemplate[]> {
   return db.select().from(taskTemplates).orderBy(asc(taskTemplates.sortOrder))
 }
 
-export async function insertTasks(db: Db, values: NewTask[]): Promise<Task[]> {
-  if (values.length === 0) return []
+/**
+ * D1 は1文あたりのバインド変数が100個までなので、1文に載せる行数を制限する。
+ * Task 1行あたり10個前後のバインドになるため、8行なら確実に収まる。
+ * （in-memory SQLite の上限はもっと緩いので、テストだけでは気づけない）
+ */
+const MAX_ROWS_PER_INSERT = 8
 
-  return insertTasksStatement(db, values)
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = []
+
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size))
+  }
+
+  return chunks
 }
 
-/** batch に載せるための insert 文。空配列は渡せない。 */
-export function insertTasksStatement(db: Db, values: NewTask[]) {
-  return db.insert(tasks).values(values).returning()
+export async function insertTasks(db: Db, values: NewTask[]): Promise<Task[]> {
+  const inserted = await Promise.all(
+    insertTasksStatements(db, values).map((statement) => statement),
+  )
+
+  return inserted.flat()
+}
+
+/**
+ * batch に載せるための insert 文。バインド変数の上限に収まるよう複数文に割る。
+ * 空配列なら空配列を返す。
+ */
+export function insertTasksStatements(db: Db, values: NewTask[]) {
+  return chunk(values, MAX_ROWS_PER_INSERT).map((rows) =>
+    db.insert(tasks).values(rows).returning(),
+  )
 }
 
 /**

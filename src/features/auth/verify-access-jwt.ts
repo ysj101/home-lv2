@@ -44,6 +44,22 @@ export function clearJwksCache(): void {
   jwksCache.clear()
 }
 
+let bypassWarned = false
+
+function warnBypassOnce(email: string): void {
+  if (bypassWarned) return
+  bypassWarned = true
+
+  console.warn(
+    `[auth] DEV_USER_EMAIL による認証バイパスが有効です (${email})。本番では設定しないでください。`,
+  )
+}
+
+/** テスト用。警告済みフラグを戻す。 */
+export function resetBypassWarning(): void {
+  bypassWarned = false
+}
+
 /**
  * `Cf-Access-Jwt-Assertion` を検証し、認証済みメールアドレスを返す。
  *
@@ -55,11 +71,10 @@ export async function verifyAccessJwt(
   config: AccessConfig,
 ): Promise<string> {
   // ローカル開発では Access を通らないので、明示的に設定された場合のみ迂回する。
-  // 万一これが本番で有効になっていても気づけるよう、必ず警告を残す。
+  // 万一これが有効になっていても気づけるよう警告を残すが、毎リクエスト出すと
+  // ログが埋まるのでアイソレートごとに1回だけにする。
   if (config.devUserEmail) {
-    console.warn(
-      `[auth] DEV_USER_EMAIL による認証バイパスが有効です (${config.devUserEmail})。本番では設定しないでください。`,
-    )
+    warnBypassOnce(config.devUserEmail)
 
     return config.devUserEmail
   }

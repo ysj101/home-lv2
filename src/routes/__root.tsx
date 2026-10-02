@@ -29,11 +29,10 @@ export const Route = createRootRoute({
   }),
   // 現在ユーザーは全画面で必要なので root で1度だけ解決する。
   loader: () => fetchCurrentUser(),
-  errorComponent: ({ error }) => (
-    <RootDocument>
-      <ErrorScreen error={error} />
-    </RootDocument>
-  ),
+  // shellComponent が <html> を出すので、ここでは中身だけを返す。
+  // RootDocument で包むと <html> が入れ子になり、React が壊れて
+  // ハードリロードのループになる。
+  errorComponent: ({ error }) => <ErrorScreen error={error} />,
   shellComponent: RootDocument,
   component: RootLayout,
 })
