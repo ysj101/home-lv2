@@ -7,11 +7,11 @@
   "vars": {
     // Cloudflare Access の Team domain と AUD タグ。取得方法は docs/cloudflare-access.md。
     // どちらもシークレットではないのでここにコミットしてよい。
-    // 空のままだと認証は fail closed（常に 401）。
+    // 空のままだと fail closed（常に設定エラー（500））。
     // ローカル開発用の DEV_USER_EMAIL はここには置かない。.dev.vars に書く
     // （本番ビルドでは読み取り自体がコードから消えるため設定しても効かない）。
-    "CF_ACCESS_TEAM_DOMAIN": "",
-    "CF_ACCESS_AUD": ""
+    "CF_ACCESS_TEAM_DOMAIN": "ysj101.cloudflareaccess.com",
+    "CF_ACCESS_AUD": "80c3ca1b43f7733681ef39b53643cb4bb3883c8efb4f0101525b2aee3d262f2e"
   },
   "d1_databases": [
     {

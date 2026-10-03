@@ -16,9 +16,11 @@ import { buildTaskTemplateSeedStatements } from '@/db/seed/task-templates'
  * 各 seed は冪等なので、何度実行しても件数は増えない。
  */
 function main() {
-  loadDevVars()
-
   const target = process.argv.includes('--remote') ? '--remote' : '--local'
+
+  // 本番に .dev.vars の example アドレスを入れないよう、remote は環境変数だけを使う。
+  // 足りなければ readHouseholdSeedConfig() が未設定のキーを挙げて止まる。
+  if (target === '--local') loadDevVars()
 
   const statements = [
     ...buildHouseholdSeedStatements(readHouseholdSeedConfig()),
