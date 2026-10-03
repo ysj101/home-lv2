@@ -45,8 +45,9 @@ pnpm db:seed:remote
 `docs/cloudflare-access.md` の「5. 値をリポジトリに入れる」に従い、`wrangler.jsonc` の
 `vars` に Team domain と AUD タグを入れてコミットする。どちらもシークレットではない。
 
-値が空のままデプロイしても、Worker は全リクエストを 401 で返す（fail closed）。
-先にデプロイして URL を確かめてから Access の値を入れる順番でも安全。
+値が空のままデプロイしても、Worker は全リクエストで設定エラーの画面（500）を返し、
+データには到達しない（fail closed）。先にデプロイして URL を確かめてから
+Access の値を入れる順番でも安全。
 
 ## 4. デプロイ
 

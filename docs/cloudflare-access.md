@@ -88,7 +88,7 @@ Include に **Emails ending in**（ドメイン単位）を使わないこと。
 ```
 
 `https://` は付けない（`verifyAccessJwt()` 側で付ける）。
-どちらかが空のままだと `readAccessConfig()` が例外を投げ、全リクエストが 401 になる（fail closed）。
+どちらかが空のままだと `readAccessConfig()` が例外を投げ、全リクエストが設定エラー（500）になる（fail closed）。
 
 `wrangler secret put` で入れたい場合は `vars` から該当キーを消してから行う。同名のキーが
 `vars` と secret の両方にあるとデプロイ時に衝突する。
