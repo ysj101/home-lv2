@@ -104,6 +104,10 @@ cp .dev.vars.example .dev.vars
 本番と同じ JWT 検証をローカルで試すときは `DEV_USER_EMAIL` を空にして
 `CF_ACCESS_TEAM_DOMAIN` / `CF_ACCESS_AUD` を入れる。
 
+バイパス中は、リクエストに `X-Dev-User-Email` ヘッダを付けるとそのメールアドレスのユーザーとして
+扱う（`verify-access-jwt.ts`）。E2E はこれで Adult A / B を切り替えている（`e2e/users.ts`）。
+このヘッダもバイパスと同じく開発ビルドでしか読まれない。
+
 ## 6. 動作確認（完了条件）
 
 デプロイ後（#42）に以下を確認する。`<host>` は Worker のホスト名。
