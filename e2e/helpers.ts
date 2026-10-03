@@ -1,5 +1,17 @@
 import { expect, type Page } from '@playwright/test'
 
+/**
+ * 画面を開き、読み込みが落ち着くまで待つ。
+ *
+ * dev サーバーではハイドレーション用のチャンクを読み終える前に次の画面へ移ると、
+ * WebKit が読み込み中の import を中断する。TanStack Router はそれを
+ * チャンクが無いものと見なしてページを再読み込みし、その再読み込みが
+ * 次の page.goto を打ち消す。同じページで何度も画面を移るときはこれを使う。
+ */
+export async function visit(page: Page, url: string): Promise<void> {
+  await page.goto(url, { waitUntil: 'networkidle' })
+}
+
 /** Quest 一覧の行。フィルターのチップや下部ナビの li と区別する。 */
 export const questRows = (page: Page) =>
   page.getByRole('list', { name: 'Quest 一覧' }).getByRole('listitem')

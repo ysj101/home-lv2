@@ -8,6 +8,13 @@ import { unauthorized } from '@/features/auth/errors'
  */
 const ACCESS_JWT_HEADER = 'Cf-Access-Jwt-Assertion'
 
+/**
+ * ローカル開発で、`devUserEmail` の代わりに使うメールアドレスを
+ * リクエストごとに指定するヘッダ。E2E で Adult A / B を切り替えるために使う。
+ * バイパスが有効なとき（開発ビルドで DEV_USER_EMAIL を設定したとき）しか読まない。
+ */
+export const DEV_USER_EMAIL_HEADER = 'X-Dev-User-Email'
+
 export type AccessConfig = {
   /** 例: `example.cloudflareaccess.com` */
   teamDomain: string
@@ -61,6 +68,19 @@ export function resetBypassWarning(): void {
 }
 
 /**
+ * バイパス時に認証済みとして扱うメールアドレス。
+ *
+ * バイパスが有効な時点で認証は素通しなので、誰として振る舞うかを選べても
+ * 失うものはない（users に無いメールは getCurrentUser が 403 にする）。
+ * それでも本番に持ち込まないよう、readAccessConfig と同じくビルドで遮断する。
+ */
+function devUserEmailFor(request: Request, fallback: string): string {
+  if (!import.meta.env.DEV) return fallback
+
+  return request.headers.get(DEV_USER_EMAIL_HEADER)?.trim() || fallback
+}
+
+/**
  * `Cf-Access-Jwt-Assertion` を検証し、認証済みメールアドレスを返す。
  *
  * issuer（Team domain）・audience（AUD タグ）・有効期限は jose 側で検証される。
@@ -76,7 +96,7 @@ export async function verifyAccessJwt(
   if (config.devUserEmail) {
     warnBypassOnce(config.devUserEmail)
 
-    return config.devUserEmail
+    return devUserEmailFor(request, config.devUserEmail)
   }
 
   const token = request.headers.get(ACCESS_JWT_HEADER)

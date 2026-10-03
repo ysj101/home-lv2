@@ -3,6 +3,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { HttpError } from '@/features/auth/errors'
 import {
+  DEV_USER_EMAIL_HEADER,
   clearJwksCache,
   resetBypassWarning,
   verifyAccessJwt,
@@ -172,5 +173,47 @@ describe('verifyAccessJwt', () => {
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('認証バイパスが有効です'),
     )
+  })
+
+  it('バイパス中は X-Dev-User-Email のメールを優先する', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const request = new Request('https://home-lv2.example.com/', {
+      headers: { [DEV_USER_EMAIL_HEADER]: 'adult-b@example.com' },
+    })
+
+    await expect(
+      verifyAccessJwt(request, { ...config, devUserEmail: 'dev@example.com' }),
+    ).resolves.toBe('adult-b@example.com')
+  })
+
+  it('X-Dev-User-Email が空ならバイパスのメールを使う', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const request = new Request('https://home-lv2.example.com/', {
+      headers: { [DEV_USER_EMAIL_HEADER]: '   ' },
+    })
+
+    await expect(
+      verifyAccessJwt(request, { ...config, devUserEmail: 'dev@example.com' }),
+    ).resolves.toBe('dev@example.com')
+  })
+
+  it('バイパスが無効なら X-Dev-User-Email は無視して JWT を検証する', async () => {
+    stubJwksFetch()
+    const request = new Request('https://home-lv2.example.com/', {
+      headers: {
+        'Cf-Access-Jwt-Assertion': await signToken(),
+        [DEV_USER_EMAIL_HEADER]: 'adult-b@example.com',
+      },
+    })
+
+    await expect(verifyAccessJwt(request, config)).resolves.toBe(EMAIL)
+    await expect(
+      verifyAccessJwt(
+        new Request('https://home-lv2.example.com/', {
+          headers: { [DEV_USER_EMAIL_HEADER]: 'adult-b@example.com' },
+        }),
+        config,
+      ),
+    ).rejects.toMatchObject({ status: 401 })
   })
 })

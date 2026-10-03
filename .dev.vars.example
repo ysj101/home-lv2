@@ -10,6 +10,7 @@
 # ローカルでは Cloudflare Access を通らないので、代わりにこのメールアドレスを
 # 認証済みとして扱う。seed した Adult A / B のどちらかを入れる。
 # 本番ビルドではこの値を読むコード自体が消えるため、本番には効かない。
+# リクエストに X-Dev-User-Email ヘッダがあれば、そちらのユーザーとして扱う（E2E で使う）。
 DEV_USER_EMAIL=adult-a@example.com
 
 # 本番と同じ JWT 検証をローカルで試したいときだけ設定する（DEV_USER_EMAIL を空にする）。
