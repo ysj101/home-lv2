@@ -76,6 +76,14 @@ Include に **Emails ending in**（ドメイン単位）を使わないこと。
 どちらもシークレットではない。Team domain はログイン画面の URL、AUD は Access が付ける JWT の
 `aud` クレームとして誰でも見られる値なので、`wrangler.jsonc` にそのままコミットしてよい。
 
+ダッシュボードの画面構成が変わって見つからないときは、Worker をデプロイしたあと
+Access のログイン画面への転送先から読み取れる。
+
+```bash
+curl -sI https://<host>/ | grep -i '^location'
+# location: https://<Team domain>/cdn-cgi/access/login/<host>?kid=<AUD タグ>&...
+```
+
 ## 5. 値をリポジトリに入れる
 
 ### 本番（`wrangler.jsonc`）
