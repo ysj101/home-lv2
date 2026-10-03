@@ -71,3 +71,9 @@ DB は global-setup で1回だけ初期化するので、全 spec を複数プ�
 | `mobile-small` | 375px | `12-responsive` / `13-mvp-scenario` |
 
 `13-mvp-scenario` は DB を自前で初期化するので、モバイル幅でも同じシナリオを流せる。
+
+## CI
+
+`.github/workflows/e2e.yml` が PR と `main` への push で `pnpm test:e2e` を流す。
+`.dev.vars` は `.dev.vars.example` をコピーして使う（触るのはランナー上のローカル D1 だけ）。
+失敗したときは HTML レポートと trace（再試行時に取得）を artifact `playwright-report` に残す。

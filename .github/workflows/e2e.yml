@@ -1,0 +1,54 @@
+name: E2E
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# 同じブランチで新しく push されたら、古い実行は止める。
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.30.2
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # desktop-chromium は Chromium、mobile-* は WebKit（iPhone 15）で動く。
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium webkit
+
+      # .dev.vars は gitignore しているので、テンプレートから作る。
+      # E2E が触るのはローカル D1 だけなので、example のメールアドレスで足りる。
+      - name: Prepare .dev.vars
+        run: cp .dev.vars.example .dev.vars
+
+      - run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
