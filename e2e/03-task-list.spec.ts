@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { ensureMoveRegistered, questRows } from './helpers'
+import { TASK_DETAIL_URL, ensureMoveRegistered, questRows } from './helpers'
 
 /** 引越しを1件登録してから一覧を見る。 */
 test.describe.configure({ mode: 'serial' })
@@ -35,7 +35,7 @@ test('行をタップすると詳細が開く', async ({ page }) => {
 
   await page.getByRole('link', { name: /引越し業者の見積もりを取る/ }).click()
 
-  await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]{36}$/)
+  await expect(page).toHaveURL(TASK_DETAIL_URL)
   // URL だけでなく、詳細の中身が出ていることまで確かめる。
   await expect(
     page.getByRole('heading', { name: '引越し業者の見積もりを取る' }),

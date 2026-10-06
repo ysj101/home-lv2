@@ -59,6 +59,9 @@ dev サーバーは `.dev.vars` の `DEV_USER_EMAIL` で認証をバイパスし
 読み込み途中で次の画面へ移ると、WebKit が中断した import を TanStack Router が
 「チャンクが無い」と見なしてページを再読み込みし、次の遷移が打ち消される。
 
+一覧や Dashboard の行から Task Detail を開くときは `openTask()` / `openRow()` を使う。
+ハイドレーション前にリンクを押すとブラウザの通常の遷移になり、保存後に戻る先の履歴が残らない。
+
 ## プロジェクトの役割
 
 DB は global-setup で1回だけ初期化するので、全 spec を複数プロジェクトで回すと

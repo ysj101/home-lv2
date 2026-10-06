@@ -1,6 +1,13 @@
 import { expect, test } from '@playwright/test'
 
-import { ensureMoveRegistered, openTask, questRows, visit } from './helpers'
+import {
+  TASK_DETAIL_URL,
+  ensureMoveRegistered,
+  openRow,
+  openTask,
+  questRows,
+  sectionRows,
+} from './helpers'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -31,14 +38,8 @@ test('保存すると一覧に戻り、変更が反映されている', async ({
   ).toContainText('期限 10/20')
 })
 
-// ハイドレーション前にリンクを押すとブラウザの通常の遷移になり、戻り先の履歴が
-// 残らない。前の画面に戻ることを確かめるテストは visit() で開いてから押す。
 test('絞り込み付きの一覧から開いたら、同じ条件の一覧に戻る', async ({ page }) => {
-  await visit(page, '/tasks?category=packing')
-  await page.getByRole('link', { name: /ベランダの片付け/ }).click()
-  await expect(
-    page.getByRole('heading', { name: 'ベランダの片付け' }),
-  ).toBeVisible()
+  await openTask(page, 'ベランダの片付け', '/tasks?category=packing')
 
   await page.getByLabel('期限').fill('2026-11-12')
   await page.getByRole('button', { name: '保存する' }).click()
@@ -50,13 +51,9 @@ test('絞り込み付きの一覧から開いたら、同じ条件の一覧に�
 })
 
 test('Dashboard から開いたら Dashboard に戻る', async ({ page }) => {
-  await visit(page, '/')
-  await page
-    .getByRole('list', { name: '期限超過 の Quest' })
-    .getByRole('link')
-    .first()
-    .click()
-  await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]{36}$/)
+  await page.goto('/')
+  await openRow(sectionRows(page, '期限超過').first())
+  await expect(page).toHaveURL(TASK_DETAIL_URL)
 
   await page.getByRole('button', { name: '保存する' }).click()
 
@@ -64,18 +61,16 @@ test('Dashboard から開いたら Dashboard に戻る', async ({ page }) => {
   await expect(page.getByText('Main Quest')).toBeVisible()
 })
 
-test('URL を直接開いて保存したら一覧に移る', async ({ page }) => {
-  await page.goto('/tasks')
-  const href = await page
-    .getByRole('link', { name: /新居の採寸と家具配置を決める/ })
-    .getAttribute('href')
+test('URL を直接開いて保存したら一覧に移る', async ({ page, context }) => {
+  await openTask(page, '新居の採寸と家具配置を決める')
 
-  // 前の画面が無い状態にするため、詳細の URL を直接開く。
-  await page.goto(href!)
-  await page.getByLabel('説明').fill('冷蔵庫の搬入経路も測る')
-  await page.getByRole('button', { name: '保存する' }).click()
+  // 前の画面が無い状態にするため、新しいタブで詳細の URL を直接開く。
+  const direct = await context.newPage()
+  await direct.goto(page.url())
+  await direct.getByLabel('説明').fill('冷蔵庫の搬入経路も測る')
+  await direct.getByRole('button', { name: '保存する' }).click()
 
-  await expect(page).toHaveURL(/\/tasks$/)
+  await expect(direct).toHaveURL(/\/tasks$/)
 })
 
 test('タイトルを空にするとサーバー側で弾かれる', async ({ page }) => {
@@ -91,7 +86,7 @@ test('タイトルを空にするとサーバー側で弾かれる', async ({ pa
     'タイトルを入力してください',
   )
   // 保存に失敗したときは画面を移らない。
-  await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]{36}$/)
+  await expect(page).toHaveURL(TASK_DETAIL_URL)
 })
 
 test('削除は確認してから実行され、一覧から消える', async ({ page }) => {
