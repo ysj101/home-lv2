@@ -138,7 +138,16 @@ function TaskDetail() {
                   },
                 },
               })
-              await router.invalidate()
+
+              // 開く前の画面（絞り込み付きの一覧や Dashboard）に戻る。
+              // キャッシュを捨てておくと、保存前の内容を一瞬見せずに読み直してから切り替わる。
+              router.clearCache()
+              if (router.history.canGoBack()) {
+                router.history.back()
+              } else {
+                // URL を直接開いたときは戻り先が無いので一覧へ。
+                await navigate({ to: '/tasks' })
+              }
             }}
           />
         </CardContent>
