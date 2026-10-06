@@ -4,7 +4,7 @@ import { TASK_TEMPLATE_SEEDS } from '@/db/seed/task-templates'
 import { addDays, daysBetween, toMonthDay, today } from '@/lib/date'
 
 import { resetDatabase } from './database'
-import { questRows, visit } from './helpers'
+import { questRows, sectionRows, visit } from './helpers'
 import { ADULT_A, ADULT_B, asUser } from './users'
 
 /**
@@ -62,13 +62,6 @@ function summaryCount(page: Page, label: string) {
     .filter({ has: page.getByText(label, { exact: true }) })
     .locator('p')
     .first()
-}
-
-/** Dashboard のセクションの行。 */
-function sectionRows(page: Page, title: string) {
-  return page
-    .getByRole('list', { name: `${title} の Quest` })
-    .getByRole('listitem')
 }
 
 /** 引越し日を変えて保存する。 */

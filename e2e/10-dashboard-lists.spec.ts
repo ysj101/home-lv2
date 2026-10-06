@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test'
 
-import { ensureMoveRegistered, questRows } from './helpers'
+import {
+  TASK_DETAIL_URL,
+  ensureMoveRegistered,
+  questRows,
+  sectionRows,
+} from './helpers'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -9,9 +14,6 @@ test.beforeAll(async ({ browser }) => {
   await ensureMoveRegistered(page)
   await page.close()
 })
-
-const section = (page: import('@playwright/test').Page, title: string) =>
-  page.getByRole('list', { name: `${title} の Quest` }).getByRole('listitem')
 
 test('4つのセクションが並ぶ', async ({ page }) => {
   await page.goto('/')
@@ -33,7 +35,7 @@ test('期限超過セクションの件数が Overdue と一致する', async ({
   await page.goto('/')
 
   // 1セクションは最大5件までなので、それを超えたら5件だけ出る。
-  await expect(section(page, '期限超過')).toHaveCount(Math.min(overdue, 5))
+  await expect(sectionRows(page, '期限超過')).toHaveCount(Math.min(overdue, 5))
 })
 
 test('セクションの行から完了にできる', async ({ page }) => {
@@ -58,7 +60,7 @@ test('セクションの行から完了にできる', async ({ page }) => {
 test('完了した Quest が最近完了セクションに出る', async ({ page }) => {
   await page.goto('/')
 
-  await expect(section(page, '最近完了した Quest').first()).toContainText(
+  await expect(sectionRows(page, '最近完了した Quest').first()).toContainText(
     'Cleared',
   )
 })
@@ -73,7 +75,7 @@ test('セクションの行から詳細へ遷移できる', async ({ page }) => 
     .getByRole('link')
     .click()
 
-  await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]{36}$/)
+  await expect(page).toHaveURL(TASK_DETAIL_URL)
 })
 
 test('5件までしか出さず、超えたら「すべて見る」で一覧へ繋がる', async ({
@@ -90,7 +92,7 @@ test('5件までしか出さず、超えたら「すべて見る」で一覧へ�
   await page.goto('/')
 
   // 出るのは5件まで。
-  await expect(section(page, '最近完了した Quest')).toHaveCount(5)
+  await expect(sectionRows(page, '最近完了した Quest')).toHaveCount(5)
 
   const seeAll = page
     .getByRole('heading', { name: /最近完了した Quest/ })

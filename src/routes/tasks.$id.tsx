@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { AssigneeSelect } from '@/components/assignee-select'
@@ -40,6 +40,40 @@ export const Route = createFileRoute('/tasks/$id')({
   component: TaskDetail,
 })
 
+type Router = ReturnType<typeof useRouter>
+
+/**
+ * 書き込みのあとに画面を移る。
+ *
+ * 前後でルーターのキャッシュを捨てる。残っていると、移った先や後で開き直した画面が
+ * 書き込み前の内容を表示してから読み直す（staleReloadMode の既定が background のため）。
+ */
+async function leaveAfterMutation(
+  router: Router,
+  go: () => Promise<void>,
+): Promise<void> {
+  router.clearCache()
+  await go()
+  router.clearCache()
+}
+
+/**
+ * 開く前の画面（絞り込み付きの一覧や Dashboard）に戻る。URL を直接開いたときは
+ * 戻り先が無いので一覧へ。どちらも読み込みが終わるまで待つ（待たないと保存ボタンが
+ * 先に押せる状態に戻り、二重に保存できてしまう）。
+ */
+function goBack(router: Router): Promise<void> {
+  if (!router.history.canGoBack()) return router.navigate({ to: '/tasks' })
+
+  return new Promise((resolve) => {
+    const unsubscribe = router.subscribe('onResolved', () => {
+      unsubscribe()
+      resolve()
+    })
+    router.history.back()
+  })
+}
+
 /** 完了・再オープンの切り替え。完了済みなら誰がいつ終えたかを添える。 */
 function CompleteToggle({
   task,
@@ -72,7 +106,6 @@ function CompleteToggle({
 function TaskDetail() {
   const { task, members } = Route.useLoaderData()
   const router = useRouter()
-  const navigate = useNavigate()
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   if (!task) {
@@ -138,7 +171,7 @@ function TaskDetail() {
                   },
                 },
               })
-              await router.invalidate()
+              await leaveAfterMutation(router, () => goBack(router))
             }}
           />
         </CardContent>
@@ -173,7 +206,9 @@ function TaskDetail() {
               className="flex-1"
               onClick={async () => {
                 await submitDeleteTask({ data: { id: task.id } })
-                await navigate({ to: '/tasks' })
+                await leaveAfterMutation(router, () =>
+                  router.navigate({ to: '/tasks' }),
+                )
               }}
             >
               削除する
