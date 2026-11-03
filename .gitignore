@@ -26,3 +26,6 @@ src/routeTree.gen.ts
 .dev.vars.*
 # テンプレートだけはコミットする
 !.dev.vars.example
+
+# Alchemy の state（スパイク中はローカル）
+.alchemy/
