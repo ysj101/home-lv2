@@ -1,9 +1,11 @@
 /**
- * #91 検証スパイク用の Alchemy v2 定義。
+ * Alchemy v2 によるインフラ定義（Worker / D1 / Cloudflare Access）。
  *
- * 本番（wrangler.jsonc / Zero Trust ダッシュボード）には触らず、
- * 別 stage（live_<user>）に Worker / D1 / Access Application を作って動作を確かめる。
- * state はスパイク中は手元の .alchemy/ に置く（#92 で Cloudflare.state() にする）。
+ * - stage: `alchemy dev` は `dev_<user>`、`alchemy deploy` は `live_<user>`、本番は `prod`
+ *   （`--stage prod`）。物理名に stage が入るので、stage が違えばリソースは衝突しない。
+ * - state: Cloudflare 上の state store（アカウント共通の Worker + Secrets Store）。
+ *   初回は `pnpm alchemy:bootstrap` で作る。手順は docs/alchemy.md。
+ * - 本番の wrangler 管理リソースを引き取るのは #97。それまで `prod` stage には deploy しない。
  */
 import * as Alchemy from 'alchemy'
 import * as Cloudflare from '@alchemy.run/cloudflare'
@@ -12,16 +14,17 @@ import * as Effect from 'effect/Effect'
 /** Zero Trust のチームドメイン。アカウントに 1 つだけ割り当てられる固定値。 */
 const CF_ACCESS_TEAM_DOMAIN = 'ysj101.cloudflareaccess.com'
 
-/** スパイク中にログインを試すメールアドレス。 */
+/**
+ * Access で許可するメールアドレス（#95 で seed と同じ出所にする）。
+ * 本番の Policy はまだダッシュボード管理なので、ここは検証用の値でよい。
+ */
 const ALLOWED_EMAILS = ['y.yagami101@gmail.com']
 
 /**
- * スパイク用の回避: Alchemy は drizzle-kit v0 レイアウト（meta/_journal.json）を
- * 拒否するので、.sql だけをコピーしたディレクトリを渡す（#94 で正式に対応する）。
+ * マイグレーションの適用は #94 で設定する。Alchemy は drizzle-kit v0 レイアウト
+ * （src/db/migrations/meta/_journal.json）を拒否するため、そのままでは渡せない。
  */
-export const Database = Cloudflare.D1.Database('Database', {
-  migrations: '/private/tmp/claude-501/-Users-ysj-Documents-code-home-lv2/08977da7-3cef-42e3-a9c5-5e12bb1b5189/scratchpad/spike-migrations',
-})
+export const Database = Cloudflare.D1.Database('Database')
 
 /**
  * Access Application を Worker とは別に宣言しておくと、出力の `aud` を
@@ -68,7 +71,7 @@ export default Alchemy.Stack(
   'HomeLv2',
   {
     providers: Cloudflare.providers(),
-    state: Alchemy.localState(),
+    state: Cloudflare.state(),
   },
   Effect.gen(function* () {
     const isDev = yield* Alchemy.ALCHEMY_DEV
